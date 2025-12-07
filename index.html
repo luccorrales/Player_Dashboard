@@ -3,7 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Supabase Plot Demo</title>
+
+  <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -16,12 +20,16 @@
   <canvas id="myChart" width="400" height="200"></canvas>
 
   <script>
-    // 🔹 PASTE YOUR OWN KEYS HERE
+    // ✅ YOUR SUPABASE CREDENTIALS
     const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
     const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
 
+    // ✅ Create client
     const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+    console.log("✅ Supabase client initialized");
+
+    // ✅ Setup Chart
     const ctx = document.getElementById("myChart").getContext("2d");
 
     const chart = new Chart(ctx, {
@@ -36,16 +44,22 @@
       }
     });
 
+    // ✅ LOAD DATA WITH ERROR LOGGING
     async function loadData() {
+      console.log("🔁 Loading data from Supabase...");
+
       const { data, error } = await supabase
         .from("measurements")
         .select("*")
         .order("created_at", { ascending: true });
 
       if (error) {
-        console.error(error);
+        console.error("❌ LOAD ERROR:", error);
+        alert("LOAD FAILED — Check console");
         return;
       }
+
+      console.log("✅ Data loaded:", data);
 
       chart.data.labels = data.map(d =>
         new Date(d.created_at).toLocaleTimeString()
@@ -54,20 +68,36 @@
       chart.update();
     }
 
+    // ✅ INSERT DATA WITH FULL ERROR LOGGING
     async function addData() {
       const value = document.getElementById("valueInput").value;
 
-      if (!value) return;
+      if (!value) {
+        alert("Enter a value first");
+        return;
+      }
 
-      await supabase.from("measurements").insert([
-        { value: parseFloat(value) }
-      ]);
+      console.log("⬆️ Inserting value:", value);
+
+      const { data, error } = await supabase
+        .from("measurements")
+        .insert([{ value: parseFloat(value) }]);
+
+      if (error) {
+        console.error("❌ INSERT ERROR:", error);
+        alert("INSERT FAILED — Check console");
+        return;
+      }
+
+      console.log("✅ Insert successful:", data);
 
       document.getElementById("valueInput").value = "";
       loadData();
     }
 
+    // ✅ Initial Load
     loadData();
+
   </script>
 
 </body>
