@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase Plot Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <h1>Supabase Live Plot Demo</h1>
+
+  <input type="number" id="valueInput" placeholder="Enter a number">
+  <button onclick="addData()">Add Data</button>
+
+  <canvas id="myChart" width="400" height="200"></canvas>
+
+  <script>
+    // 🔹 PASTE YOUR OWN KEYS HERE
+    const SUPABASE_URL = "https://YOUR_PROJECT_ID.supabase.co";
+    const SUPABASE_KEY = "YOUR_ANON_KEY";
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const ctx = document.getElementById("myChart").getContext("2d");
+
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Values",
+          data: [],
+          tension: 0.3
+        }]
+      }
+    });
+
+    async function loadData() {
+      const { data, error } = await supabase
+        .from("measurements")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      chart.data.labels = data.map(d =>
+        new Date(d.created_at).toLocaleTimeString()
+      );
+      chart.data.datasets[0].data = data.map(d => d.value);
+      chart.update();
+    }
+
+    async function addData() {
+      const value = document.getElementById("valueInput").value;
+
+      if (!value) return;
+
+      await supabase.from("measurements").insert([
+        { value: parseFloat(value) }
+      ]);
+
+      document.getElementById("valueInput").value = "";
+      loadData();
+    }
+
+    loadData();
+  </script>
+
+</body>
+</html>
