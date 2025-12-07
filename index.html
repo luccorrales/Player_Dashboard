@@ -4,32 +4,29 @@
   <meta charset="UTF-8">
   <title>Supabase Plot Demo</title>
 
-  <!-- Supabase SDK -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
   <h1>Supabase Live Plot Demo</h1>
+  <p id="status">Loading...</p>
 
   <input type="number" id="valueInput" placeholder="Enter a number">
   <button onclick="addData()">Add Data</button>
 
   <canvas id="myChart" width="400" height="200"></canvas>
 
-  <script>
-    // ✅ NEVER name this variable "supabase"
+  <!-- ✅ USE MODULE MODE (THIS FIXES EVERYTHING) -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
     const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
     const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
 
-    const supabaseClient = supabase.createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY
-    );
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    console.log("✅ Supabase client initialized");
+    document.getElementById("status").textContent = "✅ Supabase Connected";
 
     const ctx = document.getElementById("myChart").getContext("2d");
 
@@ -55,7 +52,7 @@
 
       if (error) {
         console.error("❌ LOAD ERROR:", error);
-        alert("LOAD FAILED — Check console");
+        document.getElementById("status").textContent = "❌ Load failed";
         return;
       }
 
@@ -69,7 +66,8 @@
       chart.update();
     }
 
-    async function addData() {
+    // ✅ Must be attached to window for button onclick
+    window.addData = async function () {
       const value = document.getElementById("valueInput").value;
 
       if (!value) {
@@ -85,15 +83,17 @@
 
       if (error) {
         console.error("❌ INSERT ERROR:", error);
-        alert("INSERT FAILED — Check console");
+        document.getElementById("status").textContent = "❌ Insert failed";
+        alert("Insert failed — check console");
         return;
       }
 
       console.log("✅ Insert successful:", data);
+      document.getElementById("status").textContent = "✅ Inserted!";
 
       document.getElementById("valueInput").value = "";
       loadData();
-    }
+    };
 
     loadData();
   </script>
