@@ -1,75 +1,102 @@
-<script>
-  const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
-  const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Supabase Plot Demo</title>
 
-  // ✅ FIXED: no name collision
-  const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  <!-- Supabase SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  console.log("✅ Supabase client initialized");
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
 
-  const ctx = document.getElementById("myChart").getContext("2d");
+  <h1>Supabase Live Plot Demo</h1>
 
-  const chart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [{
-        label: "Values",
-        data: [],
-        tension: 0.3
-      }]
-    }
-  });
+  <input type="number" id="valueInput" placeholder="Enter a number">
+  <button onclick="addData()">Add Data</button>
 
-  async function loadData() {
-    console.log("🔁 Loading data...");
+  <canvas id="myChart" width="400" height="200"></canvas>
 
-    const { data, error } = await supabaseClient
-      .from("measurements")
-      .select("*")
-      .order("created_at", { ascending: true });
+  <script>
+    // ✅ NEVER name this variable "supabase"
+    const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
 
-    if (error) {
-      console.error("❌ LOAD ERROR:", error);
-      alert("LOAD FAILED — Check console");
-      return;
-    }
-
-    console.log("✅ Data loaded:", data);
-
-    chart.data.labels = data.map(d =>
-      new Date(d.created_at).toLocaleTimeString()
+    const supabaseClient = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
     );
 
-    chart.data.datasets[0].data = data.map(d => d.value);
-    chart.update();
-  }
+    console.log("✅ Supabase client initialized");
 
-  async function addData() {
-    const value = document.getElementById("valueInput").value;
+    const ctx = document.getElementById("myChart").getContext("2d");
 
-    if (!value) {
-      alert("Enter a value first");
-      return;
+    const chart = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: [],
+        datasets: [{
+          label: "Values",
+          data: [],
+          tension: 0.3
+        }]
+      }
+    });
+
+    async function loadData() {
+      console.log("🔁 Loading data...");
+
+      const { data, error } = await supabaseClient
+        .from("measurements")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("❌ LOAD ERROR:", error);
+        alert("LOAD FAILED — Check console");
+        return;
+      }
+
+      console.log("✅ Data loaded:", data);
+
+      chart.data.labels = data.map(d =>
+        new Date(d.created_at).toLocaleTimeString()
+      );
+
+      chart.data.datasets[0].data = data.map(d => d.value);
+      chart.update();
     }
 
-    console.log("⬆️ Inserting value:", value);
+    async function addData() {
+      const value = document.getElementById("valueInput").value;
 
-    const { data, error } = await supabaseClient
-      .from("measurements")
-      .insert([{ value: parseFloat(value) }]);
+      if (!value) {
+        alert("Enter a value first");
+        return;
+      }
 
-    if (error) {
-      console.error("❌ INSERT ERROR:", error);
-      alert("INSERT FAILED — Check console");
-      return;
+      console.log("⬆️ Inserting value:", value);
+
+      const { data, error } = await supabaseClient
+        .from("measurements")
+        .insert([{ value: parseFloat(value) }]);
+
+      if (error) {
+        console.error("❌ INSERT ERROR:", error);
+        alert("INSERT FAILED — Check console");
+        return;
+      }
+
+      console.log("✅ Insert successful:", data);
+
+      document.getElementById("valueInput").value = "";
+      loadData();
     }
 
-    console.log("✅ Insert successful:", data);
-
-    document.getElementById("valueInput").value = "";
     loadData();
-  }
+  </script>
 
-  loadData();
-</script>
+</body>
+</html>
