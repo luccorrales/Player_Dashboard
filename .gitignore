@@ -1,0 +1,52 @@
+# Environment variables (if you add them later)
+.env
+.env.local
+.env.production
+
+# Supabase credentials backup (if you create one)
+config.local.js
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependencies (if you add npm later)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs (if you add a build system later)
+dist/
+build/
+.cache/
+
+# Operating System Files
+Thumbs.db
+.DS_Store
+
+# Temporary files
+*.tmp
+*.temp
+*~
+
+# Backup files
+*.bak
+*.backup
+
+# Personal notes (optional)
+notes.md
+todo.md
+personal-data.json
