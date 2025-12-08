@@ -4,190 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Life Stats Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 20px;
-    }
-    .container { max-width: 1400px; margin: 0 auto; }
-    h1 {
-      color: white;
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2.5em;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-    }
-    .status {
-      background: white;
-      padding: 15px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-      text-align: center;
-      font-weight: bold;
-    }
-    .tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    .tab {
-      background: rgba(255,255,255,0.2);
-      color: white;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: 16px;
-      transition: all 0.3s;
-    }
-    .tab:hover { background: rgba(255,255,255,0.3); }
-    .tab.active { background: white; color: #667eea; }
-    .content { display: none; }
-    .content.active { display: block; }
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-    .stat-card {
-      background: white;
-      border-radius: 15px;
-      padding: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transition: transform 0.3s;
-    }
-    .stat-card:hover { transform: translateY(-5px); }
-    .stat-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-    .stat-title {
-      font-size: 1.2em;
-      font-weight: bold;
-      color: #333;
-    }
-    .stat-icon {
-      font-size: 2em;
-    }
-    .percentile {
-      font-size: 3em;
-      font-weight: bold;
-      color: #667eea;
-      text-align: center;
-      margin: 20px 0;
-    }
-    .trend {
-      text-align: center;
-      font-size: 1.2em;
-      margin-bottom: 10px;
-    }
-    .trend.up { color: #10b981; }
-    .trend.down { color: #ef4444; }
-    .sub-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 15px;
-    }
-    .sub-stat {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px;
-      background: #f3f4f6;
-      border-radius: 5px;
-      font-size: 0.9em;
-    }
-    .input-section {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 20px;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-      color: #333;
-    }
-    select, input, textarea {
-      width: 100%;
-      padding: 12px;
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    button {
-      background: #667eea;
-      color: white;
-      border: none;
-      padding: 12px 30px;
-      border-radius: 8px;
-      font-size: 16px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    button:hover { background: #5568d3; }
-    .chart-container {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 20px;
-    }
-    .achievements {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 15px;
-    }
-    .achievement {
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-      text-align: center;
-      border: 3px solid #e5e7eb;
-    }
-    .achievement.unlocked { border-color: #fbbf24; background: #fffbeb; }
-    .achievement-icon {
-      font-size: 3em;
-      margin-bottom: 10px;
-      filter: grayscale(100%);
-    }
-    .achievement.unlocked .achievement-icon { filter: grayscale(0%); }
-    .warning {
-      background: #fee2e2;
-      border-left: 4px solid #ef4444;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    .projection-timeline {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-    }
-    .overall-score {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      border-radius: 20px;
-      padding: 40px;
-      text-align: center;
-      margin-bottom: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-    .overall-score h2 { font-size: 2.5em; margin-bottom: 10px; }
-    .overall-score .score { font-size: 5em; font-weight: bold; }
-  </style>
 </head>
 <body>
   <div class="container">
@@ -196,12 +15,12 @@
     <div id="status" class="status">Initializing...</div>
 
     <div class="tabs">
-      <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-      <button class="tab" onclick="switchTab('input')">➕ Add Data</button>
-      <button class="tab" onclick="switchTab('history')">📈 History</button>
-      <button class="tab" onclick="switchTab('achievements')">🏆 Achievements</button>
-      <button class="tab" onclick="switchTab('projections')">🔮 Projections</button>
-      <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+      <button class="tab active" data-tab="dashboard">📊 Dashboard</button>
+      <button class="tab" data-tab="input">➕ Add Data</button>
+      <button class="tab" data-tab="history">📈 History</button>
+      <button class="tab" data-tab="achievements">🏆 Achievements</button>
+      <button class="tab" data-tab="projections">🔮 Projections</button>
+      <button class="tab" data-tab="settings">⚙️ Settings</button>
     </div>
 
     <!-- DASHBOARD TAB -->
@@ -221,41 +40,43 @@
     <div id="input" class="content">
       <div class="input-section">
         <h2>Add New Stat Entry</h2>
-        <div class="form-group">
-          <label>Category</label>
-          <select id="categorySelect" onchange="updateSubStats()">
-            <option value="">Select Category...</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Sub-Stat</label>
-          <select id="subStatSelect">
-            <option value="">Select Sub-Stat...</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Raw Value</label>
-          <input type="number" id="valueInput" placeholder="e.g., 75kg, 120 IQ, $50000">
-        </div>
-        <div class="form-group">
-          <label>Percentile (0-100)</label>
-          <input type="number" id="percentileInput" placeholder="e.g., 75" min="0" max="100">
-        </div>
-        <div class="form-group">
-          <label>Comparison Group</label>
-          <select id="comparisonGroup">
-            <option value="age_25-30">Age 25-30</option>
-            <option value="age_30-35">Age 30-35</option>
-            <option value="profession_tech">Tech Industry</option>
-            <option value="location_canada">Canada</option>
-            <option value="general">General Population</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Notes (optional)</label>
-          <textarea id="notesInput" rows="3" placeholder="Context, how you measured this, etc."></textarea>
-        </div>
-        <button onclick="addStatEntry()">Add Entry</button>
+        <form id="statForm">
+          <div class="form-group">
+            <label>Category</label>
+            <select id="categorySelect" required>
+              <option value="">Select Category...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Sub-Stat</label>
+            <select id="subStatSelect" required>
+              <option value="">Select Sub-Stat...</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Raw Value</label>
+            <input type="number" id="valueInput" placeholder="e.g., 75kg, 120 IQ, $50000">
+          </div>
+          <div class="form-group">
+            <label>Percentile (0-100)</label>
+            <input type="number" id="percentileInput" placeholder="e.g., 75" min="0" max="100" required>
+          </div>
+          <div class="form-group">
+            <label>Comparison Group</label>
+            <select id="comparisonGroup">
+              <option value="age_25-30">Age 25-30</option>
+              <option value="age_30-35">Age 30-35</option>
+              <option value="profession_tech">Tech Industry</option>
+              <option value="location_canada">Canada</option>
+              <option value="general">General Population</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notes (optional)</label>
+            <textarea id="notesInput" rows="3" placeholder="Context, how you measured this, etc."></textarea>
+          </div>
+          <button type="submit">Add Entry</button>
+        </form>
       </div>
     </div>
 
@@ -287,494 +108,14 @@
       <div class="input-section">
         <h2>Category Importance Weights</h2>
         <p style="margin-bottom: 20px; color: #666;">Adjust how much each domain matters to you (1-10)</p>
-        <div id="weightsForm"></div>
-        <button onclick="saveWeights()">Save Weights</button>
+        <form id="weightsForm">
+          <div id="weightsFormContent"></div>
+          <button type="submit">Save Weights</button>
+        </form>
       </div>
     </div>
   </div>
 
-  <script>
-    const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    // CATEGORIES AND SUB-STATS STRUCTURE
-    const categories = {
-      physical: {
-        name: "Physical",
-        icon: "💪",
-        subStats: ["Strength", "Cardio", "Flexibility", "Coordination", "Recovery"]
-      },
-      cognitive: {
-        name: "Cognitive",
-        icon: "🧠",
-        subStats: ["Logical Reasoning", "Verbal Ability", "Memory", "Processing Speed", "Creativity"]
-      },
-      social: {
-        name: "Social",
-        icon: "🗣️",
-        subStats: ["Charisma", "Active Listening", "Public Speaking", "Networking", "Conflict Resolution"]
-      },
-      relational: {
-        name: "Relational",
-        icon: "❤️",
-        subStats: ["Relationship Quality", "Network Size", "Social Support", "Emotional Intimacy"]
-      },
-      financial: {
-        name: "Financial",
-        icon: "💰",
-        subStats: ["Income", "Net Worth", "Financial Literacy", "Savings Rate", "Investment Knowledge"]
-      },
-      emotional: {
-        name: "Emotional",
-        icon: "😌",
-        subStats: ["Resilience", "Emotional Intelligence", "Stress Management", "Self-Awareness"]
-      },
-      skills: {
-        name: "Skills",
-        icon: "🎯",
-        subStats: ["Professional Skills", "Technical Abilities", "Creative Skills", "Practical Knowledge"]
-      }
-    };
-
-    // ACHIEVEMENTS DEFINITIONS
-    const achievements = [
-      { id: 1, title: "First Steps", icon: "🎯", condition: "entries >= 1", unlocked: false },
-      { id: 2, title: "Consistent Tracker", icon: "📅", condition: "entries >= 10", unlocked: false },
-      { id: 3, title: "Physical Elite", icon: "🏋️", condition: "physical >= 80", unlocked: false },
-      { id: 4, title: "Mental Giant", icon: "🧠", condition: "cognitive >= 80", unlocked: false },
-      { id: 5, title: "Social Butterfly", icon: "🦋", condition: "social >= 80", unlocked: false },
-      { id: 6, title: "Wealthy Mind", icon: "💎", condition: "financial >= 80", unlocked: false },
-      { id: 7, title: "Well-Rounded", icon: "⭐", condition: "all_above_50", unlocked: false },
-      { id: 8, title: "Peak Performance", icon: "🏆", condition: "any_above_90", unlocked: false }
-    ];
-
-    let historyChart, projectionChart;
-    let currentWeights = {};
-
-    // INITIALIZE
-    async function init() {
-      document.getElementById("status").textContent = "✅ Connected to Supabase";
-      populateCategorySelect();
-      await loadDashboard();
-      await loadHistory();
-      await loadAchievements();
-      await loadProjections();
-      await loadWeights();
-    }
-
-    // TAB SWITCHING
-    function switchTab(tabName) {
-      document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.getElementById(tabName).classList.add('active');
-      event.target.classList.add('active');
-    }
-
-    // POPULATE CATEGORY DROPDOWN
-    function populateCategorySelect() {
-      const select = document.getElementById("categorySelect");
-      Object.keys(categories).forEach(key => {
-        const option = document.createElement("option");
-        option.value = key;
-        option.textContent = categories[key].name;
-        select.appendChild(option);
-      });
-    }
-
-    // UPDATE SUB-STATS BASED ON CATEGORY
-    function updateSubStats() {
-      const category = document.getElementById("categorySelect").value;
-      const subSelect = document.getElementById("subStatSelect");
-      subSelect.innerHTML = '<option value="">Select Sub-Stat...</option>';
-      
-      if (category && categories[category]) {
-        categories[category].subStats.forEach(sub => {
-          const option = document.createElement("option");
-          option.value = sub;
-          option.textContent = sub;
-          subSelect.appendChild(option);
-        });
-      }
-    }
-
-    // ADD STAT ENTRY
-    async function addStatEntry() {
-      const category = document.getElementById("categorySelect").value;
-      const subStat = document.getElementById("subStatSelect").value;
-      const value = document.getElementById("valueInput").value;
-      const percentile = document.getElementById("percentileInput").value;
-      const comparisonGroup = document.getElementById("comparisonGroup").value;
-      const notes = document.getElementById("notesInput").value;
-
-      if (!category || !subStat || !percentile) {
-        alert("Please fill in required fields");
-        return;
-      }
-
-      const { error } = await supabase.from("stat_entries").insert([{
-        category,
-        sub_stat: subStat,
-        value: parseFloat(value) || null,
-        percentile: parseFloat(percentile),
-        comparison_group: comparisonGroup,
-        notes
-      }]);
-
-      if (error) {
-        console.error(error);
-        document.getElementById("status").textContent = "❌ Insert failed";
-        return;
-      }
-
-      document.getElementById("status").textContent = "✅ Entry added!";
-      document.getElementById("valueInput").value = "";
-      document.getElementById("percentileInput").value = "";
-      document.getElementById("notesInput").value = "";
-      
-      await loadDashboard();
-      await loadHistory();
-      await checkAchievements();
-    }
-
-    // LOAD DASHBOARD
-    async function loadDashboard() {
-      const { data, error } = await supabase
-        .from("stat_entries")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      // Calculate latest percentiles per category
-      const categoryStats = {};
-      Object.keys(categories).forEach(key => {
-        const catEntries = data.filter(d => d.category === key);
-        if (catEntries.length > 0) {
-          const latestPercentile = catEntries[0].percentile;
-          const previousPercentile = catEntries[1]?.percentile || latestPercentile;
-          const trend = latestPercentile > previousPercentile ? "up" : 
-                       latestPercentile < previousPercentile ? "down" : "stable";
-          
-          categoryStats[key] = {
-            percentile: latestPercentile,
-            trend,
-            subStats: {}
-          };
-
-          // Get latest for each sub-stat
-          categories[key].subStats.forEach(sub => {
-            const subEntries = catEntries.filter(d => d.sub_stat === sub);
-            if (subEntries.length > 0) {
-              categoryStats[key].subStats[sub] = subEntries[0].percentile;
-            }
-          });
-        }
-      });
-
-      // Render stat cards
-      const grid = document.getElementById("statsGrid");
-      grid.innerHTML = "";
-
-      Object.keys(categories).forEach(key => {
-        const cat = categories[key];
-        const stats = categoryStats[key];
-        
-        if (stats) {
-          const card = document.createElement("div");
-          card.className = "stat-card";
-          
-          const trendSymbol = stats.trend === "up" ? "↑" : stats.trend === "down" ? "↓" : "→";
-          const trendClass = stats.trend === "up" ? "up" : stats.trend === "down" ? "down" : "";
-          
-          let subStatsHTML = "";
-          Object.keys(stats.subStats).forEach(sub => {
-            subStatsHTML += `
-              <div class="sub-stat">
-                <span>${sub}</span>
-                <span><strong>${stats.subStats[sub]}%</strong></span>
-              </div>
-            `;
-          });
-
-          card.innerHTML = `
-            <div class="stat-header">
-              <div class="stat-title">${cat.name}</div>
-              <div class="stat-icon">${cat.icon}</div>
-            </div>
-            <div class="percentile">${stats.percentile}%</div>
-            <div class="trend ${trendClass}">${trendSymbol} ${stats.trend}</div>
-            <div class="sub-stats">${subStatsHTML}</div>
-          `;
-          
-          grid.appendChild(card);
-        }
-      });
-
-      // Calculate weighted overall score
-      calculateOverallScore(categoryStats);
-
-      // Check for warnings
-      checkWarnings(categoryStats, data);
-    }
-
-    // CALCULATE OVERALL SCORE
-    function calculateOverallScore(categoryStats) {
-      let totalWeighted = 0;
-      let totalWeight = 0;
-
-      Object.keys(categoryStats).forEach(key => {
-        const weight = currentWeights[key] || 5;
-        totalWeighted += categoryStats[key].percentile * weight;
-        totalWeight += weight;
-      });
-
-      const overallScore = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 0;
-      document.getElementById("overallScore").textContent = overallScore;
-    }
-
-    // CHECK WARNINGS
-    function checkWarnings(categoryStats, allData) {
-      const warningsDiv = document.getElementById("warnings");
-      warningsDiv.innerHTML = "";
-
-      Object.keys(categoryStats).forEach(key => {
-        const catEntries = allData.filter(d => d.category === key).slice(0, 2);
-        if (catEntries.length === 2) {
-          const drop = catEntries[1].percentile - catEntries[0].percentile;
-          if (drop >= 15) {
-            const warning = document.createElement("div");
-            warning.className = "warning";
-            warning.innerHTML = `
-              <strong>⚠️ Warning:</strong> ${categories[key].name} dropped ${drop} percentile points recently!
-            `;
-            warningsDiv.appendChild(warning);
-          }
-        }
-      });
-    }
-
-    // LOAD HISTORY CHART
-    async function loadHistory() {
-      const { data, error } = await supabase
-        .from("stat_entries")
-        .select("*")
-        .order("created_at", { ascending: true });
-
-      if (error) return;
-
-      const ctx = document.getElementById("historyChart");
-      if (historyChart) historyChart.destroy();
-
-      const datasets = {};
-      Object.keys(categories).forEach(key => {
-        datasets[key] = {
-          label: categories[key].name,
-          data: [],
-          tension: 0.3
-        };
-      });
-
-      const labels = [];
-      data.forEach(entry => {
-        const date = new Date(entry.created_at).toLocaleDateString();
-        if (!labels.includes(date)) labels.push(date);
-        
-        if (datasets[entry.category]) {
-          datasets[entry.category].data.push({
-            x: date,
-            y: entry.percentile
-          });
-        }
-      });
-
-      historyChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: Object.values(datasets)
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: { display: true, text: "Percentile Progress Over Time" }
-          },
-          scales: {
-            y: { min: 0, max: 100, title: { display: true, text: "Percentile" } }
-          }
-        }
-      });
-    }
-
-    // LOAD ACHIEVEMENTS
-    async function loadAchievements() {
-      const { data, error } = await supabase.from("stat_entries").select("*");
-      if (error) return;
-
-      const categoryAvgs = {};
-      Object.keys(categories).forEach(key => {
-        const catEntries = data.filter(d => d.category === key);
-        if (catEntries.length > 0) {
-          categoryAvgs[key] = catEntries[0].percentile;
-        }
-      });
-
-      achievements.forEach(ach => {
-        if (ach.condition === "entries >= 1") ach.unlocked = data.length >= 1;
-        if (ach.condition === "entries >= 10") ach.unlocked = data.length >= 10;
-        if (ach.condition.includes(">=")) {
-          const [cat, val] = ach.condition.split(" >= ");
-          ach.unlocked = categoryAvgs[cat] >= parseInt(val);
-        }
-        if (ach.condition === "all_above_50") {
-          ach.unlocked = Object.values(categoryAvgs).every(v => v >= 50);
-        }
-        if (ach.condition === "any_above_90") {
-          ach.unlocked = Object.values(categoryAvgs).some(v => v >= 90);
-        }
-      });
-
-      const list = document.getElementById("achievementsList");
-      list.innerHTML = "";
-      achievements.forEach(ach => {
-        const div = document.createElement("div");
-        div.className = `achievement ${ach.unlocked ? "unlocked" : ""}`;
-        div.innerHTML = `
-          <div class="achievement-icon">${ach.icon}</div>
-          <strong>${ach.title}</strong>
-          <p style="font-size: 0.9em; color: #666; margin-top: 5px;">
-            ${ach.unlocked ? "✅ Unlocked!" : "🔒 Locked"}
-          </p>
-        `;
-        list.appendChild(div);
-      });
-    }
-
-    // CHECK ACHIEVEMENTS
-    async function checkAchievements() {
-      await loadAchievements();
-    }
-
-    // LOAD PROJECTIONS
-    async function loadProjections() {
-      const { data, error } = await supabase
-        .from("stat_entries")
-        .select("*")
-        .order("created_at", { ascending: true });
-
-      if (error || data.length < 2) return;
-
-      const ctx = document.getElementById("projectionChart");
-      if (projectionChart) projectionChart.destroy();
-
-      // Simple linear projection for each category
-      const projections = {};
-      Object.keys(categories).forEach(key => {
-        const catData = data.filter(d => d.category === key);
-        if (catData.length >= 2) {
-          const first = catData[0];
-          const last = catData[catData.length - 1];
-          const timeSpan = (new Date(last.created_at) - new Date(first.created_at)) / (1000 * 60 * 60 * 24 * 365);
-          const growth = (last.percentile - first.percentile) / timeSpan;
-          
-          projections[key] = {
-            current: last.percentile,
-            in5years: Math.min(100, Math.max(0, last.percentile + growth * 5)),
-            in10years: Math.min(100, Math.max(0, last.percentile + growth * 10))
-          };
-        }
-      });
-
-      const labels = ["Current", "5 Years", "10 Years"];
-      const datasets = Object.keys(projections).map(key => ({
-        label: categories[key].name,
-        data: [
-          projections[key].current,
-          projections[key].in5years,
-          projections[key].in10years
-        ]
-      }));
-
-      projectionChart = new Chart(ctx, {
-        type: "line",
-        data: { labels, datasets },
-        options: {
-          responsive: true,
-          plugins: {
-            title: { display: true, text: "Future Projections Based on Current Trends" }
-          },
-          scales: {
-            y: { min: 0, max: 100 }
-          }
-        }
-      });
-
-      // Generate insights
-      const insights = document.getElementById("projectionInsights");
-      insights.innerHTML = "<h3>Projection Insights</h3>";
-      Object.keys(projections).forEach(key => {
-        const proj = projections[key];
-        const change5 = proj.in5years - proj.current;
-        const div = document.createElement("p");
-        div.innerHTML = `<strong>${categories[key].name}:</strong> 
-          ${change5 > 0 ? "📈" : "📉"} Expected ${Math.abs(change5).toFixed(1)} percentile ${change5 > 0 ? "increase" : "decrease"} in 5 years`;
-        insights.appendChild(div);
-      });
-    }
-
-    // LOAD WEIGHTS
-    async function loadWeights() {
-      const { data, error } = await supabase
-        .from("category_weights")
-        .select("*")
-        .single();
-
-      if (data) {
-        currentWeights = data.weights || {};
-      }
-
-      const form = document.getElementById("weightsForm");
-      form.innerHTML = "";
-      Object.keys(categories).forEach(key => {
-        const weight = currentWeights[key] || 5;
-        form.innerHTML += `
-          <div class="form-group">
-            <label>${categories[key].icon} ${categories[key].name}</label>
-            <input type="range" id="weight_${key}" min="1" max="10" value="${weight}" 
-                   oninput="document.getElementById('weight_${key}_val').textContent = this.value">
-            <span id="weight_${key}_val" style="margin-left: 10px; font-weight: bold;">${weight}</span>
-          </div>
-        `;
-      });
-    }
-
-    // SAVE WEIGHTS
-    async function saveWeights() {
-      const weights = {};
-      Object.keys(categories).forEach(key => {
-        weights[key] = parseInt(document.getElementById(`weight_${key}`).value);
-      });
-
-      const { error } = await supabase
-        .from("category_weights")
-        .upsert({ id: 1, weights });
-
-      if (error) {
-        console.error(error);
-        alert("Failed to save weights");
-        return;
-      }
-
-      currentWeights = weights;
-      document.getElementById("status").textContent = "✅ Weights saved!";
-      await loadDashboard();
-    }
-
-    // START
-    init();
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
