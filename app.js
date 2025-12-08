@@ -71,17 +71,17 @@ async function init() {
   updateStatus("✅ Connected to Supabase", "success");
   
   // Setup event listeners
-  setupEventListeners();
+  setupEventListeners(); // <--- THIS MUST EXECUTE FOR TABS TO WORK
   
   // Populate form dropdowns
   populateCategorySelect();
   
-  // Load all data
-  await loadDashboard();
-  await loadHistory();
-  await loadAchievements();
-  await loadProjections();
-  await loadWeights();
+  // Load all data (Temporarily comment these out)
+  // await loadDashboard();
+  // await loadHistory();
+  // await loadAchievements();
+  // await loadProjections();
+  // await loadWeights(); 
 }
 
 function setupEventListeners() {
