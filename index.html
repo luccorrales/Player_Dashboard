@@ -389,10 +389,18 @@
 
     // INITIALIZE
     async function init() {
-      document.getElementById("status").textContent = "✅ Connected to Supabase";
-      await loadCategoryStructure();
-      await loadDashboard();
-      await loadWeights();
+        document.getElementById("status").textContent = "✅ Connected to Supabase";
+        
+        // Ensure category structure is fully loaded (or initialized) before continuing
+        const categoriesLoaded = await loadCategoryStructure();
+        
+        // Only proceed to load the dashboard and weights if categories are present
+        if (categoriesLoaded) {
+            await loadWeights();
+            await loadDashboard();
+        } else {
+            document.getElementById("status").textContent = "❌ Failed to load or initialize categories. Check console.";
+        }
     }
 
     // TAB SWITCHING
@@ -409,20 +417,36 @@
 
     // LOAD CATEGORY STRUCTURE FROM DATABASE
     async function loadCategoryStructure() {
-      const { data, error } = await supabase
-        .from("category_structure")
-        .select("*")
-        .order("path", { ascending: true });
-
-      if (error) {
-        console.error(error);
-        // Initialize with default structure if table is empty
-        await initializeDefaultStructure();
-        return;
-      }
-
-      categoryStructure = data || [];
-      populateCategorySelectors();
+        const { data, error } = await supabase
+            .from("category_structure")
+            .select("*")
+            .order("path", { ascending: true });
+    
+        if (error || !data || data.length === 0) {
+            console.warn("Category structure empty or error. Initializing default structure.");
+            
+            // Await the initialization, which calls loadCategoryStructure again upon success.
+            await initializeDefaultStructure(); 
+            
+            // Re-run the fetch after initialization attempt
+            const { data: newData, error: newError } = await supabase
+                .from("category_structure")
+                .select("*")
+                .order("path", { ascending: true });
+    
+            if (newError || !newData || newData.length === 0) {
+                console.error("Failed to initialize default structure.");
+                return false; // Failed to load/initialize
+            }
+            
+            categoryStructure = newData;
+            populateCategorySelectors();
+            return true; // Successfully initialized and loaded
+        }
+    
+        categoryStructure = data;
+        populateCategorySelectors();
+        return true; // Successfully loaded
     }
 
     // INITIALIZE DEFAULT STRUCTURE
