@@ -50,62 +50,102 @@
     .tab.active { background: white; color: #667eea; }
     .content { display: none; }
     .content.active { display: block; }
-    .dashboard-grid {
+    
+    .dashboard-container {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: 1fr 1fr;
       gap: 20px;
-      margin-bottom: 30px;
+      margin-bottom: 20px;
     }
-    .stat-card {
+    
+    @media (max-width: 968px) {
+      .dashboard-container { grid-template-columns: 1fr; }
+    }
+    
+    .spider-chart-container {
       background: white;
       border-radius: 15px;
-      padding: 20px;
+      padding: 25px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-      transition: transform 0.3s;
     }
-    .stat-card:hover { transform: translateY(-5px); }
-    .stat-header {
+    
+    .category-selector {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    .category-btn {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 10px;
+      background: #f3f4f6;
+      border: 2px solid transparent;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      text-align: left;
+      transition: all 0.3s;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 15px;
     }
-    .stat-title {
-      font-size: 1.2em;
+    
+    .category-btn:hover { background: #e5e7eb; }
+    .category-btn.selected { 
+      background: #667eea; 
+      color: white; 
+      border-color: #5568d3;
+    }
+    
+    .detail-panel {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      margin-top: 20px;
+    }
+    
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin: 20px 0;
+    }
+    
+    .stat-item {
+      background: #f3f4f6;
+      padding: 15px;
+      border-radius: 10px;
+      border-left: 4px solid #667eea;
+    }
+    
+    .stat-item h4 {
+      font-size: 0.9em;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    
+    .stat-value {
+      font-size: 1.8em;
       font-weight: bold;
       color: #333;
     }
-    .stat-icon {
-      font-size: 2em;
-    }
-    .percentile {
-      font-size: 3em;
-      font-weight: bold;
-      color: #667eea;
-      text-align: center;
-      margin: 20px 0;
-    }
-    .trend {
-      text-align: center;
+    
+    .stat-percentile {
       font-size: 1.2em;
-      margin-bottom: 10px;
+      color: #667eea;
+      margin-top: 5px;
     }
-    .trend.up { color: #10b981; }
-    .trend.down { color: #ef4444; }
-    .sub-stats {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-top: 15px;
+    
+    .history-chart {
+      background: white;
+      border-radius: 15px;
+      padding: 25px;
+      margin-top: 20px;
     }
-    .sub-stat {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px;
-      background: #f3f4f6;
-      border-radius: 5px;
-      font-size: 0.9em;
-    }
+    
     .input-section {
       background: white;
       border-radius: 15px;
@@ -137,45 +177,35 @@
       font-size: 16px;
       cursor: pointer;
       transition: background 0.3s;
+      margin-right: 10px;
     }
     button:hover { background: #5568d3; }
-    .chart-container {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-      margin-bottom: 20px;
+    button.secondary {
+      background: #6b7280;
     }
-    .achievements {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 15px;
+    button.secondary:hover { background: #4b5563; }
+    button.danger {
+      background: #ef4444;
     }
-    .achievement {
-      background: white;
-      border-radius: 10px;
-      padding: 15px;
-      text-align: center;
-      border: 3px solid #e5e7eb;
+    button.danger:hover { background: #dc2626; }
+    
+    .hierarchy-tree {
+      margin-left: 20px;
+      border-left: 2px solid #e5e7eb;
+      padding-left: 15px;
+      margin-top: 10px;
     }
-    .achievement.unlocked { border-color: #fbbf24; background: #fffbeb; }
-    .achievement-icon {
-      font-size: 3em;
-      margin-bottom: 10px;
-      filter: grayscale(100%);
+    
+    .hierarchy-item {
+      background: #f9fafb;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
-    .achievement.unlocked .achievement-icon { filter: grayscale(0%); }
-    .warning {
-      background: #fee2e2;
-      border-left: 4px solid #ef4444;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-    }
-    .projection-timeline {
-      background: white;
-      border-radius: 15px;
-      padding: 25px;
-    }
+    
     .overall-score {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -187,6 +217,40 @@
     }
     .overall-score h2 { font-size: 2.5em; margin-bottom: 10px; }
     .overall-score .score { font-size: 5em; font-weight: bold; }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active { display: flex; }
+    
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    
+    .breadcrumb {
+      background: #f3f4f6;
+      padding: 10px 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 0.9em;
+      color: #666;
+    }
   </style>
 </head>
 <body>
@@ -198,9 +262,7 @@
     <div class="tabs">
       <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
       <button class="tab" onclick="switchTab('input')">➕ Add Data</button>
-      <button class="tab" onclick="switchTab('history')">📈 History</button>
-      <button class="tab" onclick="switchTab('achievements')">🏆 Achievements</button>
-      <button class="tab" onclick="switchTab('projections')">🔮 Projections</button>
+      <button class="tab" onclick="switchTab('manage')">🗂️ Manage Categories</button>
       <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
 
@@ -212,34 +274,46 @@
         <p>Based on your personalized importance weights</p>
       </div>
 
-      <div id="warnings"></div>
+      <div class="dashboard-container">
+        <div class="spider-chart-container">
+          <h2>Overall Performance</h2>
+          <canvas id="spiderChart"></canvas>
+        </div>
+        
+        <div class="category-selector">
+          <h2>Select Category</h2>
+          <div id="categoryButtons"></div>
+        </div>
+      </div>
       
-      <div class="dashboard-grid" id="statsGrid"></div>
+      <div id="detailPanel" class="detail-panel" style="display: none;">
+        <div class="breadcrumb" id="breadcrumb"></div>
+        <h2 id="detailTitle">Category Details</h2>
+        <div class="stat-grid" id="detailStats"></div>
+        <div class="history-chart">
+          <canvas id="detailChart"></canvas>
+        </div>
+      </div>
     </div>
 
     <!-- INPUT TAB -->
     <div id="input" class="content">
       <div class="input-section">
         <h2>Add New Stat Entry</h2>
+        <div class="breadcrumb" id="inputBreadcrumb">Select category path</div>
         <div class="form-group">
-          <label>Category</label>
-          <select id="categorySelect" onchange="updateSubStats()">
-            <option value="">Select Category...</option>
+          <label>Category Path</label>
+          <select id="categoryPathSelect" onchange="updateInputPath()">
+            <option value="">Select...</option>
           </select>
         </div>
         <div class="form-group">
-          <label>Sub-Stat</label>
-          <select id="subStatSelect">
-            <option value="">Select Sub-Stat...</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Raw Value</label>
+          <label>Raw Value (optional)</label>
           <input type="number" id="valueInput" placeholder="e.g., 75kg, 120 IQ, $50000">
         </div>
         <div class="form-group">
           <label>Percentile (0-100)</label>
-          <input type="number" id="percentileInput" placeholder="e.g., 75" min="0" max="100">
+          <input type="number" id="percentileInput" placeholder="e.g., 75" min="0" max="100" required>
         </div>
         <div class="form-group">
           <label>Comparison Group</label>
@@ -259,26 +333,13 @@
       </div>
     </div>
 
-    <!-- HISTORY TAB -->
-    <div id="history" class="content">
-      <div class="chart-container">
-        <h2>Progress Over Time</h2>
-        <canvas id="historyChart"></canvas>
-      </div>
-    </div>
-
-    <!-- ACHIEVEMENTS TAB -->
-    <div id="achievements" class="content">
-      <h2 style="color: white; margin-bottom: 20px;">🏆 Achievements & Milestones</h2>
-      <div class="achievements" id="achievementsList"></div>
-    </div>
-
-    <!-- PROJECTIONS TAB -->
-    <div id="projections" class="content">
-      <div class="projection-timeline">
-        <h2>Future Projections</h2>
-        <canvas id="projectionChart"></canvas>
-        <div id="projectionInsights" style="margin-top: 20px;"></div>
+    <!-- MANAGE CATEGORIES TAB -->
+    <div id="manage" class="content">
+      <div class="input-section">
+        <h2>Category Hierarchy</h2>
+        <button onclick="openAddCategoryModal()">+ Add New Category</button>
+        <button onclick="openAddSubCategoryModal()" class="secondary">+ Add Sub-Category</button>
+        <div id="categoryHierarchy" style="margin-top: 20px;"></div>
       </div>
     </div>
 
@@ -293,73 +354,44 @@
     </div>
   </div>
 
+  <!-- MODAL FOR ADDING CATEGORIES -->
+  <div id="categoryModal" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle">Add Category</h2>
+      <div class="form-group">
+        <label>Parent Category (optional)</label>
+        <select id="modalParentSelect">
+          <option value="">Top Level</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Category Name</label>
+        <input type="text" id="modalCategoryName" placeholder="e.g., Strength Training">
+      </div>
+      <div class="form-group">
+        <label>Icon (emoji)</label>
+        <input type="text" id="modalCategoryIcon" placeholder="💪" maxlength="2">
+      </div>
+      <button onclick="saveCategory()">Save</button>
+      <button onclick="closeModal()" class="secondary">Cancel</button>
+    </div>
+  </div>
+
   <script>
     const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
     const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    // CATEGORIES AND SUB-STATS STRUCTURE
-    const categories = {
-      physical: {
-        name: "Physical",
-        icon: "💪",
-        subStats: ["Strength", "Cardio", "Flexibility", "Coordination", "Recovery"]
-      },
-      cognitive: {
-        name: "Cognitive",
-        icon: "🧠",
-        subStats: ["Logical Reasoning", "Verbal Ability", "Memory", "Processing Speed", "Creativity"]
-      },
-      social: {
-        name: "Social",
-        icon: "🗣️",
-        subStats: ["Charisma", "Active Listening", "Public Speaking", "Networking", "Conflict Resolution"]
-      },
-      relational: {
-        name: "Relational",
-        icon: "❤️",
-        subStats: ["Relationship Quality", "Network Size", "Social Support", "Emotional Intimacy"]
-      },
-      financial: {
-        name: "Financial",
-        icon: "💰",
-        subStats: ["Income", "Net Worth", "Financial Literacy", "Savings Rate", "Investment Knowledge"]
-      },
-      emotional: {
-        name: "Emotional",
-        icon: "😌",
-        subStats: ["Resilience", "Emotional Intelligence", "Stress Management", "Self-Awareness"]
-      },
-      skills: {
-        name: "Skills",
-        icon: "🎯",
-        subStats: ["Professional Skills", "Technical Abilities", "Creative Skills", "Practical Knowledge"]
-      }
-    };
-
-    // ACHIEVEMENTS DEFINITIONS
-    const achievements = [
-      { id: 1, title: "First Steps", icon: "🎯", condition: "entries >= 1", unlocked: false },
-      { id: 2, title: "Consistent Tracker", icon: "📅", condition: "entries >= 10", unlocked: false },
-      { id: 3, title: "Physical Elite", icon: "🏋️", condition: "physical >= 80", unlocked: false },
-      { id: 4, title: "Mental Giant", icon: "🧠", condition: "cognitive >= 80", unlocked: false },
-      { id: 5, title: "Social Butterfly", icon: "🦋", condition: "social >= 80", unlocked: false },
-      { id: 6, title: "Wealthy Mind", icon: "💎", condition: "financial >= 80", unlocked: false },
-      { id: 7, title: "Well-Rounded", icon: "⭐", condition: "all_above_50", unlocked: false },
-      { id: 8, title: "Peak Performance", icon: "🏆", condition: "any_above_90", unlocked: false }
-    ];
-
-    let historyChart, projectionChart;
+    let categoryStructure = [];
+    let spiderChart, detailChart;
     let currentWeights = {};
+    let selectedCategory = null;
 
     // INITIALIZE
     async function init() {
       document.getElementById("status").textContent = "✅ Connected to Supabase";
-      populateCategorySelect();
+      await loadCategoryStructure();
       await loadDashboard();
-      await loadHistory();
-      await loadAchievements();
-      await loadProjections();
       await loadWeights();
     }
 
@@ -369,52 +401,413 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.getElementById(tabName).classList.add('active');
       event.target.classList.add('active');
+      
+      if (tabName === 'manage') {
+        renderCategoryHierarchy();
+      }
     }
 
-    // POPULATE CATEGORY DROPDOWN
-    function populateCategorySelect() {
-      const select = document.getElementById("categorySelect");
-      Object.keys(categories).forEach(key => {
-        const option = document.createElement("option");
-        option.value = key;
-        option.textContent = categories[key].name;
-        select.appendChild(option);
+    // LOAD CATEGORY STRUCTURE FROM DATABASE
+    async function loadCategoryStructure() {
+      const { data, error } = await supabase
+        .from("category_structure")
+        .select("*")
+        .order("path", { ascending: true });
+
+      if (error) {
+        console.error(error);
+        // Initialize with default structure if table is empty
+        await initializeDefaultStructure();
+        return;
+      }
+
+      categoryStructure = data || [];
+      populateCategorySelectors();
+    }
+
+    // INITIALIZE DEFAULT STRUCTURE
+    async function initializeDefaultStructure() {
+      const defaults = [
+        { path: "physical", name: "Physical", icon: "💪", parent_path: null },
+        { path: "physical.strength", name: "Strength", icon: "🏋️", parent_path: "physical" },
+        { path: "physical.cardio", name: "Cardio", icon: "🏃", parent_path: "physical" },
+        { path: "physical.flexibility", name: "Flexibility", icon: "🧘", parent_path: "physical" },
+        
+        { path: "cognitive", name: "Cognitive", icon: "🧠", parent_path: null },
+        { path: "cognitive.logic", name: "Logical Reasoning", icon: "🔬", parent_path: "cognitive" },
+        { path: "cognitive.verbal", name: "Verbal Ability", icon: "📖", parent_path: "cognitive" },
+        { path: "cognitive.memory", name: "Memory", icon: "🧩", parent_path: "cognitive" },
+        
+        { path: "social", name: "Social", icon: "🗣️", parent_path: null },
+        { path: "social.charisma", name: "Charisma", icon: "✨", parent_path: "social" },
+        { path: "social.networking", name: "Networking", icon: "🤝", parent_path: "social" },
+        
+        { path: "financial", name: "Financial", icon: "💰", parent_path: null },
+        { path: "financial.income", name: "Income", icon: "💵", parent_path: "financial" },
+        { path: "financial.networth", name: "Net Worth", icon: "💎", parent_path: "financial" },
+        
+        { path: "emotional", name: "Emotional", icon: "😌", parent_path: null },
+        { path: "emotional.resilience", name: "Resilience", icon: "🛡️", parent_path: "emotional" },
+        { path: "emotional.eq", name: "Emotional Intelligence", icon: "❤️", parent_path: "emotional" }
+      ];
+
+      const { error } = await supabase.from("category_structure").insert(defaults);
+      if (!error) {
+        await loadCategoryStructure();
+      }
+    }
+
+    // GET TOP LEVEL CATEGORIES
+    function getTopLevelCategories() {
+      return categoryStructure.filter(c => !c.parent_path);
+    }
+
+    // GET CHILDREN OF A CATEGORY
+    function getChildren(path) {
+      return categoryStructure.filter(c => c.parent_path === path);
+    }
+
+    // BUILD CATEGORY TREE
+    function buildCategoryTree(parentPath = null, level = 0) {
+      const categories = parentPath === null ? 
+        getTopLevelCategories() : 
+        getChildren(parentPath);
+      
+      return categories.map(cat => ({
+        ...cat,
+        level,
+        children: buildCategoryTree(cat.path, level + 1)
+      }));
+    }
+
+    // POPULATE CATEGORY SELECTORS
+    function populateCategorySelectors() {
+      // Dashboard buttons
+      const buttonContainer = document.getElementById("categoryButtons");
+      buttonContainer.innerHTML = "";
+      
+      getTopLevelCategories().forEach(cat => {
+        const btn = document.createElement("button");
+        btn.className = "category-btn";
+        btn.innerHTML = `
+          <span>${cat.icon} ${cat.name}</span>
+          <span>→</span>
+        `;
+        btn.onclick = () => selectCategory(cat.path);
+        buttonContainer.appendChild(btn);
+      });
+
+      // Input dropdown - flatten all paths
+      const pathSelect = document.getElementById("categoryPathSelect");
+      pathSelect.innerHTML = '<option value="">Select...</option>';
+      
+      function addOptions(cats, prefix = "") {
+        cats.forEach(cat => {
+          const option = document.createElement("option");
+          option.value = cat.path;
+          option.textContent = prefix + cat.icon + " " + cat.name;
+          pathSelect.appendChild(option);
+          
+          if (cat.children && cat.children.length > 0) {
+            addOptions(cat.children, prefix + "  ");
+          }
+        });
+      }
+      
+      const tree = buildCategoryTree();
+      addOptions(tree);
+
+      // Parent select in modal
+      const parentSelect = document.getElementById("modalParentSelect");
+      parentSelect.innerHTML = '<option value="">Top Level</option>';
+      
+      function addParentOptions(cats, prefix = "") {
+        cats.forEach(cat => {
+          const option = document.createElement("option");
+          option.value = cat.path;
+          option.textContent = prefix + cat.icon + " " + cat.name;
+          parentSelect.appendChild(option);
+          
+          if (cat.children && cat.children.length > 0) {
+            addParentOptions(cat.children, prefix + "  ");
+          }
+        });
+      }
+      
+      addParentOptions(tree);
+    }
+
+    // SELECT CATEGORY FOR DETAIL VIEW
+    async function selectCategory(path) {
+      selectedCategory = path;
+      
+      // Update button states
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.remove('selected');
+      });
+      event.target.closest('.category-btn').classList.add('selected');
+      
+      // Show detail panel
+      document.getElementById("detailPanel").style.display = "block";
+      
+      // Build breadcrumb
+      const breadcrumb = document.getElementById("breadcrumb");
+      const pathParts = path.split('.');
+      let breadcrumbHTML = "Home";
+      let currentPath = "";
+      
+      pathParts.forEach((part, i) => {
+        currentPath = i === 0 ? part : currentPath + "." + part;
+        const cat = categoryStructure.find(c => c.path === currentPath);
+        if (cat) {
+          breadcrumbHTML += ` > ${cat.icon} ${cat.name}`;
+        }
+      });
+      breadcrumb.textContent = breadcrumbHTML;
+      
+      // Get category info
+      const category = categoryStructure.find(c => c.path === path);
+      document.getElementById("detailTitle").textContent = `${category.icon} ${category.name}`;
+      
+      // Load stats for this category and children
+      await loadDetailStats(path);
+    }
+
+    // LOAD DETAIL STATS
+    async function loadDetailStats(path) {
+      // Get all descendants
+      const descendants = getDescendants(path);
+      const allPaths = [path, ...descendants.map(d => d.path)];
+      
+      // Fetch latest data for all paths
+      const { data, error } = await supabase
+        .from("stat_entries")
+        .select("*")
+        .in("category_path", allPaths)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      // Get latest for each path
+      const statsGrid = document.getElementById("detailStats");
+      statsGrid.innerHTML = "";
+      
+      // Group by category_path
+      const grouped = {};
+      data.forEach(entry => {
+        if (!grouped[entry.category_path]) {
+          grouped[entry.category_path] = [];
+        }
+        grouped[entry.category_path].push(entry);
+      });
+
+      // Display immediate children
+      const children = getChildren(path);
+      children.forEach(child => {
+        const childData = grouped[child.path];
+        if (childData && childData.length > 0) {
+          const latest = childData[0];
+          const statItem = document.createElement("div");
+          statItem.className = "stat-item";
+          statItem.style.cursor = "pointer";
+          statItem.onclick = () => selectCategory(child.path);
+          statItem.innerHTML = `
+            <h4>${child.icon} ${child.name}</h4>
+            <div class="stat-value">${latest.value || "—"}</div>
+            <div class="stat-percentile">${latest.percentile}th percentile</div>
+          `;
+          statsGrid.appendChild(statItem);
+        }
+      });
+
+      // If leaf node (no children), show own latest value
+      if (children.length === 0 && grouped[path]) {
+        const latest = grouped[path][0];
+        const statItem = document.createElement("div");
+        statItem.className = "stat-item";
+        statItem.innerHTML = `
+          <h4>Latest Entry</h4>
+          <div class="stat-value">${latest.value || "—"}</div>
+          <div class="stat-percentile">${latest.percentile}th percentile</div>
+          <div style="font-size: 0.8em; color: #666; margin-top: 10px;">
+            ${new Date(latest.created_at).toLocaleDateString()}
+          </div>
+        `;
+        statsGrid.appendChild(statItem);
+      }
+
+      // Load history chart
+      await loadDetailChart(path);
+    }
+
+    // GET ALL DESCENDANTS
+    function getDescendants(path) {
+      const direct = getChildren(path);
+      let all = [...direct];
+      direct.forEach(child => {
+        all = all.concat(getDescendants(child.path));
+      });
+      return all;
+    }
+
+    // LOAD DETAIL CHART
+    async function loadDetailChart(path) {
+      const children = getChildren(path);
+      const allPaths = children.length > 0 ? 
+        children.map(c => c.path) : 
+        [path];
+
+      const { data, error } = await supabase
+        .from("stat_entries")
+        .select("*")
+        .in("category_path", allPaths)
+        .order("created_at", { ascending: true });
+
+      if (error) return;
+
+      const ctx = document.getElementById("detailChart");
+      if (detailChart) detailChart.destroy();
+
+      // Group by category_path
+      const datasets = {};
+      allPaths.forEach(p => {
+        const cat = categoryStructure.find(c => c.path === p);
+        if (cat) {
+          datasets[p] = {
+            label: cat.icon + " " + cat.name,
+            data: [],
+            tension: 0.3,
+            borderWidth: 2
+          };
+        }
+      });
+
+      const labels = [];
+      data.forEach(entry => {
+        const date = new Date(entry.created_at).toLocaleDateString();
+        if (!labels.includes(date)) labels.push(date);
+        
+        if (datasets[entry.category_path]) {
+          datasets[entry.category_path].data.push({
+            x: date,
+            y: entry.percentile
+          });
+        }
+      });
+
+      detailChart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels,
+          datasets: Object.values(datasets)
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: { 
+              display: true, 
+              text: "Historical Progress (Percentiles)" 
+            }
+          },
+          scales: {
+            y: { 
+              min: 0, 
+              max: 100, 
+              title: { display: true, text: "Percentile" } 
+            }
+          }
+        }
       });
     }
 
-    // UPDATE SUB-STATS BASED ON CATEGORY
-    function updateSubStats() {
-      const category = document.getElementById("categorySelect").value;
-      const subSelect = document.getElementById("subStatSelect");
-      subSelect.innerHTML = '<option value="">Select Sub-Stat...</option>';
+    // LOAD SPIDER CHART
+    async function loadDashboard() {
+      const topLevel = getTopLevelCategories();
       
-      if (category && categories[category]) {
-        categories[category].subStats.forEach(sub => {
-          const option = document.createElement("option");
-          option.value = sub;
-          option.textContent = sub;
-          subSelect.appendChild(option);
-        });
+      // Get latest percentile for each top-level category
+      const categoryAverages = {};
+      
+      for (const cat of topLevel) {
+        const descendants = getDescendants(cat.path);
+        const allPaths = [cat.path, ...descendants.map(d => d.path)];
+        
+        const { data, error } = await supabase
+          .from("stat_entries")
+          .select("percentile")
+          .in("category_path", allPaths)
+          .order("created_at", { ascending: false })
+          .limit(10);
+
+        if (data && data.length > 0) {
+          const avg = data.reduce((sum, d) => sum + d.percentile, 0) / data.length;
+          categoryAverages[cat.path] = avg;
+        } else {
+          categoryAverages[cat.path] = 0;
+        }
       }
+
+      // Create spider chart
+      const ctx = document.getElementById("spiderChart");
+      if (spiderChart) spiderChart.destroy();
+
+      spiderChart = new Chart(ctx, {
+        type: "radar",
+        data: {
+          labels: topLevel.map(c => c.icon + " " + c.name),
+          datasets: [{
+            label: "Current Percentiles",
+            data: topLevel.map(c => categoryAverages[c.path] || 0),
+            backgroundColor: "rgba(102, 126, 234, 0.2)",
+            borderColor: "#667eea",
+            borderWidth: 2,
+            pointBackgroundColor: "#667eea"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          scales: {
+            r: {
+              min: 0,
+              max: 100,
+              ticks: { stepSize: 20 }
+            }
+          }
+        }
+      });
+
+      // Calculate overall score
+      let totalWeighted = 0;
+      let totalWeight = 0;
+
+      topLevel.forEach(cat => {
+        const weight = currentWeights[cat.path] || 5;
+        totalWeighted += (categoryAverages[cat.path] || 0) * weight;
+        totalWeight += weight;
+      });
+
+      const overallScore = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 0;
+      document.getElementById("overallScore").textContent = overallScore;
     }
 
     // ADD STAT ENTRY
     async function addStatEntry() {
-      const category = document.getElementById("categorySelect").value;
-      const subStat = document.getElementById("subStatSelect").value;
+      const categoryPath = document.getElementById("categoryPathSelect").value;
       const value = document.getElementById("valueInput").value;
       const percentile = document.getElementById("percentileInput").value;
       const comparisonGroup = document.getElementById("comparisonGroup").value;
       const notes = document.getElementById("notesInput").value;
 
-      if (!category || !subStat || !percentile) {
-        alert("Please fill in required fields");
+      if (!categoryPath || !percentile) {
+        alert("Please select a category and enter percentile");
         return;
       }
 
       const { error } = await supabase.from("stat_entries").insert([{
-        category,
-        sub_stat: subStat,
+        category_path: categoryPath,
         value: parseFloat(value) || null,
         percentile: parseFloat(percentile),
         comparison_group: comparisonGroup,
@@ -433,296 +826,126 @@
       document.getElementById("notesInput").value = "";
       
       await loadDashboard();
-      await loadHistory();
-      await checkAchievements();
+      if (selectedCategory) {
+        await loadDetailStats(selectedCategory);
+      }
     }
 
-    // LOAD DASHBOARD
-    async function loadDashboard() {
-      const { data, error } = await supabase
-        .from("stat_entries")
-        .select("*")
-        .order("created_at", { ascending: false });
+    // UPDATE INPUT PATH
+    function updateInputPath() {
+      const path = document.getElementById("categoryPathSelect").value;
+      if (path) {
+        const cat = categoryStructure.find(c => c.path === path);
+        document.getElementById("inputBreadcrumb").textContent = 
+          `${cat.icon} ${cat.name}`;
+      }
+    }
 
-      if (error) {
-        console.error(error);
+    // MODAL FUNCTIONS
+    function openAddCategoryModal() {
+      document.getElementById("modalTitle").textContent = "Add Top-Level Category";
+      document.getElementById("modalParentSelect").value = "";
+      document.getElementById("modalCategoryName").value = "";
+      document.getElementById("modalCategoryIcon").value = "";
+      document.getElementById("categoryModal").classList.add("active");
+    }
+
+    function openAddSubCategoryModal() {
+      document.getElementById("modalTitle").textContent = "Add Sub-Category";
+      document.getElementById("modalCategoryName").value = "";
+      document.getElementById("modalCategoryIcon").value = "";
+      document.getElementById("categoryModal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("categoryModal").classList.remove("active");
+    }
+
+    async function saveCategory() {
+      const parentPath = document.getElementById("modalParentSelect").value;
+      const name = document.getElementById("modalCategoryName").value;
+      const icon = document.getElementById("modalCategoryIcon").value;
+
+      if (!name) {
+        alert("Please enter a category name");
         return;
       }
 
-      // Calculate latest percentiles per category
-      const categoryStats = {};
-      Object.keys(categories).forEach(key => {
-        const catEntries = data.filter(d => d.category === key);
-        if (catEntries.length > 0) {
-          const latestPercentile = catEntries[0].percentile;
-          const previousPercentile = catEntries[1]?.percentile || latestPercentile;
-          const trend = latestPercentile > previousPercentile ? "up" : 
-                       latestPercentile < previousPercentile ? "down" : "stable";
-          
-          categoryStats[key] = {
-            percentile: latestPercentile,
-            trend,
-            subStats: {}
-          };
+      // Generate path
+      const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+      const path = parentPath ? `${parentPath}.${safeName}` : safeName;
 
-          // Get latest for each sub-stat
-          categories[key].subStats.forEach(sub => {
-            const subEntries = catEntries.filter(d => d.sub_stat === sub);
-            if (subEntries.length > 0) {
-              categoryStats[key].subStats[sub] = subEntries[0].percentile;
-            }
-          });
-        }
-      });
+      const { error } = await supabase.from("category_structure").insert([{
+        path,
+        name,
+        icon: icon || "📊",
+        parent_path: parentPath || null
+      }]);
 
-      // Render stat cards
-      const grid = document.getElementById("statsGrid");
-      grid.innerHTML = "";
+      if (error) {
+        console.error(error);
+        alert("Failed to add category");
+        return;
+      }
 
-      Object.keys(categories).forEach(key => {
-        const cat = categories[key];
-        const stats = categoryStats[key];
-        
-        if (stats) {
-          const card = document.createElement("div");
-          card.className = "stat-card";
-          
-          const trendSymbol = stats.trend === "up" ? "↑" : stats.trend === "down" ? "↓" : "→";
-          const trendClass = stats.trend === "up" ? "up" : stats.trend === "down" ? "down" : "";
-          
-          let subStatsHTML = "";
-          Object.keys(stats.subStats).forEach(sub => {
-            subStatsHTML += `
-              <div class="sub-stat">
-                <span>${sub}</span>
-                <span><strong>${stats.subStats[sub]}%</strong></span>
-              </div>
-            `;
-          });
+      closeModal();
+      await loadCategoryStructure();
+      renderCategoryHierarchy();
+      document.getElementById("status").textContent = "✅ Category added!";
+    }
 
-          card.innerHTML = `
-            <div class="stat-header">
-              <div class="stat-title">${cat.name}</div>
-              <div class="stat-icon">${cat.icon}</div>
+    // RENDER CATEGORY HIERARCHY
+    function renderCategoryHierarchy() {
+      const container = document.getElementById("categoryHierarchy");
+      container.innerHTML = "";
+
+      function renderTree(cats, parentElement) {
+        cats.forEach(cat => {
+          const item = document.createElement("div");
+          item.className = "hierarchy-item";
+          item.innerHTML = `
+            <span>${cat.icon} ${cat.name}</span>
+            <div>
+              <button onclick="deleteCategory('${cat.path}')" class="danger" style="padding: 5px 10px; font-size: 14px;">Delete</button>
             </div>
-            <div class="percentile">${stats.percentile}%</div>
-            <div class="trend ${trendClass}">${trendSymbol} ${stats.trend}</div>
-            <div class="sub-stats">${subStatsHTML}</div>
           `;
-          
-          grid.appendChild(card);
-        }
-      });
+          parentElement.appendChild(item);
 
-      // Calculate weighted overall score
-      calculateOverallScore(categoryStats);
-
-      // Check for warnings
-      checkWarnings(categoryStats, data);
-    }
-
-    // CALCULATE OVERALL SCORE
-    function calculateOverallScore(categoryStats) {
-      let totalWeighted = 0;
-      let totalWeight = 0;
-
-      Object.keys(categoryStats).forEach(key => {
-        const weight = currentWeights[key] || 5;
-        totalWeighted += categoryStats[key].percentile * weight;
-        totalWeight += weight;
-      });
-
-      const overallScore = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 0;
-      document.getElementById("overallScore").textContent = overallScore;
-    }
-
-    // CHECK WARNINGS
-    function checkWarnings(categoryStats, allData) {
-      const warningsDiv = document.getElementById("warnings");
-      warningsDiv.innerHTML = "";
-
-      Object.keys(categoryStats).forEach(key => {
-        const catEntries = allData.filter(d => d.category === key).slice(0, 2);
-        if (catEntries.length === 2) {
-          const drop = catEntries[1].percentile - catEntries[0].percentile;
-          if (drop >= 15) {
-            const warning = document.createElement("div");
-            warning.className = "warning";
-            warning.innerHTML = `
-              <strong>⚠️ Warning:</strong> ${categories[key].name} dropped ${drop} percentile points recently!
-            `;
-            warningsDiv.appendChild(warning);
+          if (cat.children && cat.children.length > 0) {
+            const subtree = document.createElement("div");
+            subtree.className = "hierarchy-tree";
+            parentElement.appendChild(subtree);
+            renderTree(cat.children, subtree);
           }
-        }
-      });
+        });
+      }
+
+      const tree = buildCategoryTree();
+      renderTree(tree, container);
     }
 
-    // LOAD HISTORY CHART
-    async function loadHistory() {
-      const { data, error } = await supabase
-        .from("stat_entries")
-        .select("*")
-        .order("created_at", { ascending: true });
+    // DELETE CATEGORY
+    async function deleteCategory(path) {
+      if (!confirm(`Delete "${path}" and all its sub-categories?`)) return;
 
-      if (error) return;
+      // Delete all descendants
+      const descendants = getDescendants(path);
+      const allPaths = [path, ...descendants.map(d => d.path)];
 
-      const ctx = document.getElementById("historyChart");
-      if (historyChart) historyChart.destroy();
+      const { error } = await supabase
+        .from("category_structure")
+        .delete()
+        .in("path", allPaths);
 
-      const datasets = {};
-      Object.keys(categories).forEach(key => {
-        datasets[key] = {
-          label: categories[key].name,
-          data: [],
-          tension: 0.3
-        };
-      });
+      if (error) {
+        console.error(error);
+        alert("Failed to delete category");
+        return;
+      }
 
-      const labels = [];
-      data.forEach(entry => {
-        const date = new Date(entry.created_at).toLocaleDateString();
-        if (!labels.includes(date)) labels.push(date);
-        
-        if (datasets[entry.category]) {
-          datasets[entry.category].data.push({
-            x: date,
-            y: entry.percentile
-          });
-        }
-      });
-
-      historyChart = new Chart(ctx, {
-        type: "line",
-        data: {
-          labels,
-          datasets: Object.values(datasets)
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            title: { display: true, text: "Percentile Progress Over Time" }
-          },
-          scales: {
-            y: { min: 0, max: 100, title: { display: true, text: "Percentile" } }
-          }
-        }
-      });
-    }
-
-    // LOAD ACHIEVEMENTS
-    async function loadAchievements() {
-      const { data, error } = await supabase.from("stat_entries").select("*");
-      if (error) return;
-
-      const categoryAvgs = {};
-      Object.keys(categories).forEach(key => {
-        const catEntries = data.filter(d => d.category === key);
-        if (catEntries.length > 0) {
-          categoryAvgs[key] = catEntries[0].percentile;
-        }
-      });
-
-      achievements.forEach(ach => {
-        if (ach.condition === "entries >= 1") ach.unlocked = data.length >= 1;
-        if (ach.condition === "entries >= 10") ach.unlocked = data.length >= 10;
-        if (ach.condition.includes(">=")) {
-          const [cat, val] = ach.condition.split(" >= ");
-          ach.unlocked = categoryAvgs[cat] >= parseInt(val);
-        }
-        if (ach.condition === "all_above_50") {
-          ach.unlocked = Object.values(categoryAvgs).every(v => v >= 50);
-        }
-        if (ach.condition === "any_above_90") {
-          ach.unlocked = Object.values(categoryAvgs).some(v => v >= 90);
-        }
-      });
-
-      const list = document.getElementById("achievementsList");
-      list.innerHTML = "";
-      achievements.forEach(ach => {
-        const div = document.createElement("div");
-        div.className = `achievement ${ach.unlocked ? "unlocked" : ""}`;
-        div.innerHTML = `
-          <div class="achievement-icon">${ach.icon}</div>
-          <strong>${ach.title}</strong>
-          <p style="font-size: 0.9em; color: #666; margin-top: 5px;">
-            ${ach.unlocked ? "✅ Unlocked!" : "🔒 Locked"}
-          </p>
-        `;
-        list.appendChild(div);
-      });
-    }
-
-    // CHECK ACHIEVEMENTS
-    async function checkAchievements() {
-      await loadAchievements();
-    }
-
-    // LOAD PROJECTIONS
-    async function loadProjections() {
-      const { data, error } = await supabase
-        .from("stat_entries")
-        .select("*")
-        .order("created_at", { ascending: true });
-
-      if (error || data.length < 2) return;
-
-      const ctx = document.getElementById("projectionChart");
-      if (projectionChart) projectionChart.destroy();
-
-      // Simple linear projection for each category
-      const projections = {};
-      Object.keys(categories).forEach(key => {
-        const catData = data.filter(d => d.category === key);
-        if (catData.length >= 2) {
-          const first = catData[0];
-          const last = catData[catData.length - 1];
-          const timeSpan = (new Date(last.created_at) - new Date(first.created_at)) / (1000 * 60 * 60 * 24 * 365);
-          const growth = (last.percentile - first.percentile) / timeSpan;
-          
-          projections[key] = {
-            current: last.percentile,
-            in5years: Math.min(100, Math.max(0, last.percentile + growth * 5)),
-            in10years: Math.min(100, Math.max(0, last.percentile + growth * 10))
-          };
-        }
-      });
-
-      const labels = ["Current", "5 Years", "10 Years"];
-      const datasets = Object.keys(projections).map(key => ({
-        label: categories[key].name,
-        data: [
-          projections[key].current,
-          projections[key].in5years,
-          projections[key].in10years
-        ]
-      }));
-
-      projectionChart = new Chart(ctx, {
-        type: "line",
-        data: { labels, datasets },
-        options: {
-          responsive: true,
-          plugins: {
-            title: { display: true, text: "Future Projections Based on Current Trends" }
-          },
-          scales: {
-            y: { min: 0, max: 100 }
-          }
-        }
-      });
-
-      // Generate insights
-      const insights = document.getElementById("projectionInsights");
-      insights.innerHTML = "<h3>Projection Insights</h3>";
-      Object.keys(projections).forEach(key => {
-        const proj = projections[key];
-        const change5 = proj.in5years - proj.current;
-        const div = document.createElement("p");
-        div.innerHTML = `<strong>${categories[key].name}:</strong> 
-          ${change5 > 0 ? "📈" : "📉"} Expected ${Math.abs(change5).toFixed(1)} percentile ${change5 > 0 ? "increase" : "decrease"} in 5 years`;
-        insights.appendChild(div);
-      });
+      await loadCategoryStructure();
+      renderCategoryHierarchy();
+      document.getElementById("status").textContent = "✅ Category deleted!";
     }
 
     // LOAD WEIGHTS
@@ -738,14 +961,15 @@
 
       const form = document.getElementById("weightsForm");
       form.innerHTML = "";
-      Object.keys(categories).forEach(key => {
-        const weight = currentWeights[key] || 5;
+      
+      getTopLevelCategories().forEach(cat => {
+        const weight = currentWeights[cat.path] || 5;
         form.innerHTML += `
           <div class="form-group">
-            <label>${categories[key].icon} ${categories[key].name}</label>
-            <input type="range" id="weight_${key}" min="1" max="10" value="${weight}" 
-                   oninput="document.getElementById('weight_${key}_val').textContent = this.value">
-            <span id="weight_${key}_val" style="margin-left: 10px; font-weight: bold;">${weight}</span>
+            <label>${cat.icon} ${cat.name}</label>
+            <input type="range" id="weight_${cat.path}" min="1" max="10" value="${weight}" 
+                   oninput="document.getElementById('weight_${cat.path}_val').textContent = this.value">
+            <span id="weight_${cat.path}_val" style="margin-left: 10px; font-weight: bold;">${weight}</span>
           </div>
         `;
       });
@@ -754,8 +978,8 @@
     // SAVE WEIGHTS
     async function saveWeights() {
       const weights = {};
-      Object.keys(categories).forEach(key => {
-        weights[key] = parseInt(document.getElementById(`weight_${key}`).value);
+      getTopLevelCategories().forEach(cat => {
+        weights[cat.path] = parseInt(document.getElementById(`weight_${cat.path}`).value);
       });
 
       const { error } = await supabase
