@@ -475,96 +475,6 @@
     let userProfile = {};
     let metricDefinitions = [];
 
-    // PERCENTILE FUNCTIONS LIBRARY
-    const percentileFunctions = {
-      // Net Worth Percentile (age-adjusted)
-      networth_percentile: (value, age) => {
-        const ageGroup = Math.floor(age / 10) * 10;
-        const benchmarks = {
-          20: [0, 5000, 15000, 50000, 100000],
-          30: [0, 20000, 50000, 150000, 300000],
-          40: [0, 50000, 150000, 400000, 800000],
-          50: [0, 100000, 300000, 750000, 1500000],
-          60: [0, 200000, 500000, 1200000, 2500000]
-        };
-        const bench = benchmarks[ageGroup] || benchmarks[30];
-        return calculatePercentileFromBenchmarks(value, bench);
-      },
-      
-      // Income Percentile (general US data approximation)
-      income_percentile: (value) => {
-        const benchmarks = [0, 25000, 40000, 60000, 85000, 120000, 180000, 300000];
-        return calculatePercentileFromBenchmarks(value, benchmarks);
-      },
-      
-      // Bench Press Percentile (male, age-adjusted, bodyweight ratio)
-      bench_press_percentile: (weight, age, bodyweight) => {
-        const ratio = weight / bodyweight;
-        const ageFactor = age < 30 ? 1.0 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
-        const adjustedRatio = ratio / ageFactor;
-        const benchmarks = [0, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-        return calculatePercentileFromBenchmarks(adjustedRatio, benchmarks);
-      },
-      
-      // IQ Percentile (standard distribution)
-      iq_percentile: (value) => {
-        const mean = 100;
-        const sd = 15;
-        const z = (value - mean) / sd;
-        return Math.round(cumulativeNormalDistribution(z) * 100);
-      },
-      
-      // 5K Run Time Percentile (minutes, age and gender adjusted)
-      run_5k_percentile: (minutes, age, gender) => {
-        const isMale = gender === 'male';
-        const ageFactor = age < 30 ? 1.0 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
-        
-        // Lower time = better, so we invert
-        const benchmarks = isMale ? 
-          [40, 30, 25, 22, 20, 18, 16] : 
-          [45, 35, 30, 27, 24, 21, 19];
-        
-        // Adjust for age
-        const adjusted = benchmarks.map(b => b / ageFactor);
-        // Invert because lower is better
-        const percentile = 100 - calculatePercentileFromBenchmarks(minutes, adjusted);
-        return Math.max(0, Math.min(100, percentile));
-      },
-      
-      // General strength percentile (bodyweight ratio)
-      strength_ratio_percentile: (weight, bodyweight) => {
-        const ratio = weight / bodyweight;
-        const benchmarks = [0, 0.3, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-        return calculatePercentileFromBenchmarks(ratio, benchmarks);
-      }
-    };
-
-    // Helper: Calculate percentile from benchmark array
-    function calculatePercentileFromBenchmarks(value, benchmarks) {
-      if (value <= benchmarks[0]) return 0;
-      if (value >= benchmarks[benchmarks.length - 1]) return 100;
-      
-      for (let i = 0; i < benchmarks.length - 1; i++) {
-        if (value >= benchmarks[i] && value <= benchmarks[i + 1]) {
-          const range = benchmarks[i + 1] - benchmarks[i];
-          const position = value - benchmarks[i];
-          const percentInRange = position / range;
-          const percentileStart = (i / (benchmarks.length - 1)) * 100;
-          const percentileEnd = ((i + 1) / (benchmarks.length - 1)) * 100;
-          return Math.round(percentileStart + (percentileEnd - percentileStart) * percentInRange);
-        }
-      }
-      return 50;
-    }
-
-    // Helper: Cumulative normal distribution (for IQ calculation)
-    function cumulativeNormalDistribution(z) {
-      const t = 1 / (1 + 0.2316419 * Math.abs(z));
-      const d = 0.3989423 * Math.exp(-z * z / 2);
-      const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-      return z > 0 ? 1 - prob : prob;
-    }
-
     // INITIALIZE
     async function init() {
       document.getElementById("status").textContent = "✅ Connected to Supabase";
@@ -1419,5 +1329,16 @@
 
     init();
   </script>
+  <script type="module">
+  import { percentileFunctions } from "./js/percentile/index.js";
+  import { calculatePercentileFromBenchmarks, cumulativeNormalDistribution } 
+    from "./js/percentile/percentile-utils.js";
+
+  // Make imported functions globally available to existing code
+  window.percentileFunctions = percentileFunctions;
+  window.calculatePercentileFromBenchmarks = calculatePercentileFromBenchmarks;
+  window.cumulativeNormalDistribution = cumulativeNormalDistribution;
+</script>
+
 </body>
 </html>
