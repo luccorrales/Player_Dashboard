@@ -1,266 +1,267 @@
 # 🎮 Personal Life Statistics Dashboard
 
-A gamified self-improvement tracking system that quantifies your real-world personal stats like a video game character sheet.
+A gamified self-improvement tracking system that quantifies your real-life stats across multiple domains with automatic percentile calculations.
+
+![Dark Theme](https://img.shields.io/badge/theme-dark-purple)
+![Status](https://img.shields.io/badge/status-active-success)
+![Mobile](https://img.shields.io/badge/mobile-friendly-blue)
+
+---
 
 ## ✨ Features
 
-### 📊 Core Functionality
-- **7 Life Domains**: Physical, Cognitive, Social, Relational, Financial, Emotional, Skills
-- **Percentile Tracking**: Rank yourself against comparison groups (age, location, profession)
-- **Sub-Stats**: Detailed breakdowns within each domain
-- **Dynamic Tracking**: Monitor progress over months and years
-- **Weighted Scoring**: Customize which domains matter most to you
+### 📊 Comprehensive Tracking
+- **7 Major Domains:** Physical, Cognitive, Social, Financial, Emotional, Relational, Skills
+- **70+ Built-in Percentile Functions:** Automatic calculations for common metrics
+- **Unlimited Custom Categories:** Create your own hierarchical category structure
+- **Multiple Metrics Per Category:** Track as many data points as you need
 
-### 🎯 Advanced Features
-- **Achievement System**: Unlock milestones as you improve
-- **Warning System**: Get alerted when stats decline significantly
-- **Future Projections**: See where you'll be in 5-10 years based on current trends
-- **Historical Charts**: Visualize your progress over time
-- **Comparison Groups**: Compare yourself across multiple peer groups
+### 🎯 Smart Analytics
+- **Spider/Radar Chart:** Visualize overall performance across all domains
+- **Historical Tracking:** Multi-colored line charts show progress over time
+- **Weighted Scoring:** Customize which domains matter most to you
+- **Automatic Percentiles:** Age, gender, and context-adjusted calculations
+
+### 🎨 Modern Interface
+- **Dark Theme:** Easy on the eyes with purple accents
+- **Responsive Design:** Works perfectly on mobile and desktop
+- **Drill-Down Navigation:** Click any category to see detailed breakdowns
+- **Real-Time Calculations:** See percentiles as you type
+
+### 🔧 Fully Modular
+- **Edit Without Data Loss:** Modify categories and metrics safely
+- **Extensible Functions:** Add new percentile calculations easily
+- **Organized Codebase:** Percentile functions separated by category
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- A Supabase account (free tier works perfectly)
-- A modern web browser
-- Basic understanding of HTML/CSS/JS (for customization)
+- Supabase account (free tier works perfectly)
+- Modern web browser
+- (Optional) Web hosting for deployment
 
-### Setup Instructions
+### Installation
 
-#### 1. Database Setup (Supabase)
+1. **Clone or Download**
+   ```bash
+   git clone https://github.com/yourusername/life-stats-dashboard.git
+   cd life-stats-dashboard
+   ```
 
-1. Create a new Supabase project at [supabase.com](https://supabase.com)
+2. **Set Up Supabase**
+   - Create a new Supabase project
+   - Run the SQL schema from `IMPLEMENTATION_GUIDE.md`
+   - Copy your Project URL and anon key
 
-2. Go to **SQL Editor** and run this SQL:
+3. **Configure Credentials**
+   Edit `index.html` lines 367-368:
+   ```javascript
+   const SUPABASE_URL = "YOUR_SUPABASE_URL";
+   const SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY";
+   ```
 
-```sql
--- Create stat entries table
-CREATE TABLE stat_entries (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  category TEXT NOT NULL,
-  sub_stat TEXT NOT NULL,
-  value DECIMAL,
-  percentile DECIMAL NOT NULL CHECK (percentile >= 0 AND percentile <= 100),
-  comparison_group TEXT,
-  notes TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Create category weights table
-CREATE TABLE category_weights (
-  id INTEGER PRIMARY KEY DEFAULT 1,
-  weights JSONB NOT NULL DEFAULT '{}',
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Insert default weights
-INSERT INTO category_weights (id, weights) 
-VALUES (1, '{"physical": 5, "cognitive": 5, "social": 5, "relational": 5, "financial": 5, "emotional": 5, "skills": 5}');
-
--- Enable Row Level Security
-ALTER TABLE stat_entries ENABLE ROW LEVEL SECURITY;
-ALTER TABLE category_weights ENABLE ROW LEVEL SECURITY;
-
--- Create policies (public access for single-user app)
-CREATE POLICY "Allow all operations" ON stat_entries FOR ALL USING (true);
-CREATE POLICY "Allow all operations" ON category_weights FOR ALL USING (true);
-
--- Create indexes for performance
-CREATE INDEX idx_stat_entries_category ON stat_entries(category);
-CREATE INDEX idx_stat_entries_created_at ON stat_entries(created_at DESC);
-```
-
-3. Get your credentials:
-   - Go to **Project Settings** → **API**
-   - Copy your **Project URL**
-   - Copy your **anon/public key**
-
-#### 2. Configure the Application
-
-1. Open `app.js` in a text editor
-
-2. Replace the placeholder credentials:
-
-```javascript
-const SUPABASE_URL = "https://your-project.supabase.co";
-const SUPABASE_KEY = "your-anon-key-here";
-```
-
-#### 3. Deploy
-
-**Option A: Local Development**
-- Simply open `index.html` in your browser
-- No server required!
-
-**Option B: GitHub Pages**
-1. Create a GitHub repository
-2. Upload all files (index.html, styles.css, app.js, README.md)
-3. Go to repo Settings → Pages
-4. Deploy from main branch
-5. Access via `https://yourusername.github.io/life-stats-dashboard`
-
-**Option C: Netlify Drop**
-1. Go to [netlify.com/drop](https://netlify.com/drop)
-2. Drag and drop your folder
-3. Get instant live URL
-
-**Option D: Vercel**
-1. Import your GitHub repo to Vercel
-2. Deploy with one click
-
-## 📖 How to Use
-
-### Adding Your First Stats
-
-1. Click **"➕ Add Data"** tab
-2. Select a **Category** (e.g., Physical)
-3. Select a **Sub-Stat** (e.g., Strength)
-4. Enter your **raw value** (optional, e.g., "75kg bench press")
-5. Enter your **percentile** (0-100, research population benchmarks)
-6. Select your **comparison group** (age, profession, location)
-7. Add **notes** if desired
-8. Click **"Add Entry"**
-
-### Finding Percentile Rankings
-
-Research population norms for your stats:
-- **Physical**: Fitness test databases, WHO guidelines
-- **Cognitive**: IQ tests, standardized assessments
-- **Financial**: Income percentile calculators by location/age
-- **Social**: Self-assessment against social skills frameworks
-- **Emotional**: EQ assessments, psychology resources
-
-### Customizing Importance Weights
-
-1. Go to **"⚙️ Settings"** tab
-2. Adjust sliders (1-10) for each domain
-3. Higher numbers = more important to you
-4. Click **"Save Weights"**
-5. Your overall score updates based on your priorities
-
-### Tracking Progress
-
-- Visit **"📈 History"** to see progress charts
-- Check **"🏆 Achievements"** for unlocked milestones
-- Review **"🔮 Projections"** for future forecasts
-- Dashboard shows warnings for declining stats
-
-## 🎨 Customization
-
-### Adding New Categories
-
-Edit `app.js` and add to the `CATEGORIES` object:
-
-```javascript
-const CATEGORIES = {
-  // ... existing categories
-  creative: {
-    name: "Creative",
-    icon: "🎨",
-    subStats: ["Drawing", "Writing", "Music", "Photography"]
-  }
-};
-```
-
-### Creating Custom Achievements
-
-Edit the `ACHIEVEMENTS` array in `app.js`:
-
-```javascript
-{
-  id: 9,
-  title: "Custom Achievement",
-  icon: "🌟",
-  condition: "custom_logic_here",
-  unlocked: false
-}
-```
-
-### Styling Changes
-
-Edit `styles.css` to customize:
-- Color scheme (search for `#667eea` and `#764ba2`)
-- Font sizes
-- Card layouts
-- Responsive breakpoints
-
-## 📊 Project Structure
-
-```
-life-stats-dashboard/
-├── index.html          # Main HTML structure
-├── styles.css          # All styling
-├── app.js              # Application logic
-├── README.md           # This file
-└── .gitignore          # Git ignore rules
-```
-
-## 🔒 Security Notes
-
-**Current Setup**: Single-user application with public database access
-
-**For Production**:
-1. Enable Supabase Authentication
-2. Update RLS policies to restrict by user_id
-3. Never commit API keys to public repos
-4. Use environment variables for credentials
-
-## 🛠️ Future Enhancements
-
-Potential features to add:
-- [ ] Multi-user support with authentication
-- [ ] Data export (CSV, JSON)
-- [ ] Mobile app version
-- [ ] API integrations (fitness trackers, bank accounts)
-- [ ] Social features (compare with friends)
-- [ ] AI-powered insights and recommendations
-- [ ] Reminder system for regular updates
-- [ ] Photo/document attachments for evidence
-- [ ] Custom comparison groups
-- [ ] Advanced statistical analysis
-
-## 🐛 Troubleshooting
-
-### "Failed to load dashboard"
-- Check Supabase credentials in `app.js`
-- Verify tables exist in Supabase
-- Check browser console for errors
-
-### Charts not displaying
-- Ensure Chart.js CDN is loading
-- Check for JavaScript errors in console
-- Verify data exists in database
-
-### Percentiles not calculating
-- Ensure percentile values are between 0-100
-- Check that entries are saving to database
-- Verify category names match exactly
-
-## 📄 License
-
-MIT License - Feel free to modify and distribute
-
-## 🤝 Contributing
-
-This is a personal project, but suggestions are welcome! 
-
-Open an issue or submit a pull request on GitHub.
-
-## 💡 Inspiration
-
-Inspired by video game RPG stat systems and the quantified self movement.
-
-## 📧 Support
-
-For questions or issues:
-- Check the [Supabase documentation](https://supabase.com/docs)
-- Review browser console errors
-- Open a GitHub issue
+4. **Open and Use**
+   - Double-click `index.html` to open in browser
+   - OR deploy to any static hosting service
 
 ---
 
-**Built with**: Vanilla JavaScript, Chart.js, Supabase
+## 📖 Usage Guide
 
-**Version**: 1.0.0
+### First Time Setup
 
-**Last Updated**: December 2024
+1. **Settings Tab → Personal Information**
+   - Enter your age, gender, weight, location
+   - These are used for personalized percentile calculations
+
+2. **Manage Categories Tab**
+   - Review default categories (Physical, Cognitive, etc.)
+   - Add custom categories with "+ Add New Category"
+   - Define metrics for each category
+
+3. **Add Data Tab**
+   - Select a category that has metrics
+   - Enter values for your metrics
+   - Watch percentiles calculate automatically!
+
+4. **Dashboard**
+   - View spider chart of all domains
+   - Click any category for detailed breakdown
+   - See historical progress charts
+
+---
+
+## 📁 Project Structure
+
+```
+life-stats-dashboard/
+├── index.html                          # Main application
+├── js/
+│   └── percentile/
+│       ├── index.js                    # Helper functions
+│       ├── percentile-physical.js      # Physical metrics (11 functions)
+│       ├── percentile-cognitive.js     # Cognitive metrics (15 functions)
+│       ├── percentile-financial.js     # Financial metrics (13 functions)
+│       ├── percentile-social.js        # Social metrics (15 functions)
+│       └── percentile-emotional.js     # Emotional metrics (20 functions)
+├── IMPLEMENTATION_GUIDE.md             # Detailed technical guide
+└── README.md                           # This file
+```
+
+---
+
+## 🎯 Example Use Cases
+
+### Fitness Tracking
+```
+Physical
+├── Strength
+│   ├── Bench Press (lbs) → auto-calculates percentile vs bodyweight
+│   ├── Squat (lbs) → age-adjusted percentile
+│   └── Deadlift (lbs) → compares to strength standards
+└── Cardio
+    ├── 5K Time (minutes) → gender + age adjusted
+    └── VO2 Max (ml/kg/min) → fitness level percentile
+```
+
+### Career Development
+```
+Skills
+├── Programming
+│   ├── LeetCode Problems Solved → difficulty-weighted
+│   ├── Projects Completed → complexity scoring
+│   └── Code Review Speed → efficiency metric
+└── Languages
+    ├── English (CEFR Level) → standardized assessment
+    └── Spanish (CEFR Level) → proficiency tracking
+```
+
+### Financial Health
+```
+Financial
+├── Net Worth ($) → age-adjusted percentile
+├── Income ($) → national percentile
+├── Savings Rate (%) → vs recommended guidelines
+└── Credit Score → FICO percentile
+```
+
+---
+
+## 🔧 Adding Custom Percentile Functions
+
+See `IMPLEMENTATION_GUIDE.md` for detailed instructions. Quick example:
+
+```javascript
+// In js/percentile/percentile-custom.js
+
+percentileFunctions.my_custom_metric = (value, age) => {
+  const benchmarks = [0, 10, 25, 50, 75, 90, 100];
+  return calculatePercentileFromBenchmarks(value, benchmarks);
+};
+```
+
+Then add the script tag to `index.html`:
+```html
+<script src="js/percentile/percentile-custom.js"></script>
+```
+
+---
+
+## 📊 Built-in Percentile Functions (74 total)
+
+### Physical (11)
+Bench press, squat, deadlift, 5K/10K/marathon times, VO2 max, body fat %, flexibility, push-ups, pull-ups
+
+### Cognitive (15)
+IQ, SAT, ACT, GRE, reading speed, typing speed, memory span, reaction time, chess rating, language proficiency
+
+### Financial (13)
+Net worth, income, savings rate, credit score, investment returns, emergency fund, debt-to-income, retirement savings
+
+### Social (15)
+Friends count, network size, social events, public speaking, social media, volunteering, response time, empathy, languages
+
+### Emotional (20)
+EQ, stress management, resilience, meditation, sleep quality, anxiety, depression, life satisfaction, burnout, optimism
+
+---
+
+## 🎨 Customization
+
+### Change Theme Colors
+Edit the CSS gradient in `index.html`:
+```css
+background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+```
+
+### Modify Category Weights
+Settings tab → adjust sliders (1-10) for each domain
+
+### Edit Categories
+Manage Categories tab → Edit button → modify without losing data
+
+---
+
+## 🔒 Privacy & Data
+
+- All data stored in your private Supabase instance
+- No third-party analytics or tracking
+- You control your data completely
+- Can export data anytime from Supabase
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend:** Pure HTML, CSS, JavaScript
+- **Charts:** Chart.js
+- **Database:** Supabase (PostgreSQL)
+- **Hosting:** Static (works anywhere)
+
+---
+
+## 📱 Mobile Support
+
+Fully responsive design works on:
+- iOS Safari
+- Android Chrome
+- Any modern mobile browser
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! Areas for improvement:
+- Additional percentile functions
+- New category templates
+- UI/UX enhancements
+- Documentation improvements
+
+---
+
+## 📝 License
+
+MIT License - feel free to use and modify for personal or commercial use.
+
+---
+
+## 🙏 Acknowledgments
+
+- Inspired by video game RPG stat systems
+- Percentile benchmarks sourced from research studies and standardized assessments
+- Built with support from the self-improvement community
+
+---
+
+## 📧 Support
+
+For issues or questions:
+1. Check `IMPLEMENTATION_GUIDE.md` for detailed technical docs
+2. Review browser console for error messages
+3. Open an issue on GitHub
+
+---
+
+**Happy tracking! Level up your real life! 🚀📈**
