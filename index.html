@@ -433,10 +433,11 @@
     </div>
   </div>
 
-  <!-- MODAL FOR ADDING CATEGORIES -->
+  <!-- MODAL FOR ADDING/EDITING CATEGORIES -->
   <div id="categoryModal" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle">Add Category</h2>
+      <input type="hidden" id="modalEditPath">
       <div class="form-group">
         <label>Parent Category (optional)</label>
         <select id="modalParentSelect">
@@ -448,8 +449,17 @@
         <input type="text" id="modalCategoryName" placeholder="e.g., Strength Training">
       </div>
       <div class="form-group">
-        <label>Icon (emoji)</label>
-        <input type="text" id="modalCategoryIcon" placeholder="💪" maxlength="2">
+        <label>Icon (emoji, optional)</label>
+        <input type="text" id="modalCategoryIcon" placeholder="Leave empty for no icon" maxlength="2">
+      </div>
+      
+      <h3 style="margin-top: 20px; margin-bottom: 10px;">Metrics for this Category</h3>
+      <div id="metricsContainer"></div>
+      <button onclick="addMetricField()" class="secondary">+ Add Metric</button>
+      
+      <div style="margin-top: 20px;">
+        <button onclick="saveCategory()">Save Category</button>
+        <button onclick="closeModal()" class="secondary">Cancel</button>
       </div>
       
       <h3 style="margin-top: 20px; margin-bottom: 10px;">Metrics for this Category</h3>
@@ -463,6 +473,12 @@
     </div>
   </div>
 
+  <script src="js/percentile/index.js"></script>
+  <script src="js/percentile/percentile-physical.js"></script>
+  <script src="js/percentile/percentile-cognitive.js"></script>
+  <script src="js/percentile/percentile-financial.js"></script>
+  <script src="js/percentile/percentile-social.js"></script>
+  <script src="js/percentile/percentile-emotional.js"></script>
   <script>
     const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
     const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
@@ -726,10 +742,15 @@
       
       function addOptions(cats, prefix = "") {
         cats.forEach(cat => {
-          const option = document.createElement("option");
-          option.value = cat.path;
-          option.textContent = prefix + cat.icon + " " + cat.name;
-          pathSelect.appendChild(option);
+          // Only add categories that have metrics defined
+          const hasMetrics = metricDefinitions.some(m => m.category_path === cat.path);
+          
+          if (hasMetrics) {
+            const option = document.createElement("option");
+            option.value = cat.path;
+            option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
+            pathSelect.appendChild(option);
+          }
           
           if (cat.children && cat.children.length > 0) {
             addOptions(cat.children, prefix + "  ");
@@ -1182,6 +1203,7 @@
 
     function openAddCategoryModal() {
       document.getElementById("modalTitle").textContent = "Add Top-Level Category";
+      document.getElementById("modalEditPath").value = "";
       document.getElementById("modalParentSelect").value = "";
       document.getElementById("modalCategoryName").value = "";
       document.getElementById("modalCategoryIcon").value = "";
@@ -1192,6 +1214,7 @@
 
     function openAddSubCategoryModal() {
       document.getElementById("modalTitle").textContent = "Add Sub-Category";
+      document.getElementById("modalEditPath").value = "";
       document.getElementById("modalCategoryName").value = "";
       document.getElementById("modalCategoryIcon").value = "";
       document.getElementById("metricsContainer").innerHTML = "";
@@ -1245,6 +1268,9 @@
     }
 
     async function saveCategory() {
+      const editPath = document.getElementById("modalEditPath").value;
+      const isEdit = !!editPath;
+      
       const parentPath = document.getElementById("modalParentSelect").value;
       const name = document.getElementById("modalCategoryName").value;
       const icon = document.getElementById("modalCategoryIcon").value;
@@ -1302,7 +1328,19 @@
       await loadCategoryStructure();
       await loadMetricDefinitions();
       renderCategoryHierarchy();
-      document.getElementById("status").textContent = "✅ Category added!";
+      document.getElementById("status").textContent = isEdit ? "✅ Category updated!" : "✅ Category added!";
+    }
+
+    function getParametersForFunction(funcName) {
+      const paramMap = {
+        networth_percentile: ["value", "age"],
+        income_percentile: ["value"],
+        bench_press_percentile: ["weight", "age", "bodyweight"],
+        iq_percentile: ["value"],
+        run_5k_percentile: ["minutes", "age", "gender"],
+        strength_ratio_percentile: ["weight", "bodyweight"]
+      };
+      return paramMap[funcName] || ["value"];
     }
 
     function getParametersForFunction(funcName) {
@@ -1334,6 +1372,7 @@
           item.innerHTML = `
             <span>${cat.icon} ${cat.name}${metricsText}</span>
             <div>
+              <button onclick="openEditCategoryModal('${cat.path}')" class="secondary" style="padding: 5px 10px; font-size: 14px;">Edit</button>
               <button onclick="deleteCategory('${cat.path}')" class="danger" style="padding: 5px 10px; font-size: 14px;">Delete</button>
             </div>
           `;
