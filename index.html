@@ -158,6 +158,45 @@
       border: 1px solid #3a3a4e;
     }
     
+    .chart-controls {
+      background: #1a1a2e;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #3a3a4e;
+    }
+    
+    .control-group {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    
+    .control-group label {
+      margin: 0;
+      min-width: 80px;
+    }
+    
+    .control-group select,
+    .control-group input {
+      width: auto;
+      min-width: 120px;
+    }
+    
+    .control-group input[type="number"] {
+      width: 80px;
+    }
+    
+    .custom-date-range {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background: #252538;
+      border-radius: 5px;
+    }
+    
     .input-section {
       background: #2a2a3e;
       border-radius: 15px;
@@ -355,6 +394,42 @@
         <h2 id="detailTitle">Category Details</h2>
         <div class="stat-grid" id="detailStats"></div>
         <div class="history-chart">
+          <div class="chart-controls">
+            <div class="control-group">
+              <label>Time Scale:</label>
+              <select id="timeScale" onchange="updateChartSettings()">
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly" selected>Monthly</option>
+                <option value="yearly">Yearly</option>
+                <option value="custom">Custom Range</option>
+              </select>
+              
+              <label>Go Back:</label>
+              <input type="number" id="timeUnits" value="6" min="1" max="100" onchange="updateChartSettings()">
+              <span id="timeUnitsLabel">months</span>
+              
+              <button onclick="refreshChart()" style="margin: 0;">Refresh</button>
+            </div>
+            
+            <div id="customDateRange" class="custom-date-range">
+              <div class="control-group">
+                <label>Start Date:</label>
+                <input type="date" id="customStartDate">
+                
+                <label>End Date:</label>
+                <input type="date" id="customEndDate">
+                
+                <label>Aggregate By:</label>
+                <select id="customAggregation">
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                  <option value="yearly">Yearly</option>
+                </select>
+              </div>
+            </div>
+          </div>
           <canvas id="detailChart"></canvas>
         </div>
       </div>
@@ -416,6 +491,10 @@
               </select>
             </div>
             <div class="form-group">
+              <label>Weight (lbs or kg)</label>
+              <input type="number" id="userWeight" placeholder="e.g., 180">
+            </div>
+            <div class="form-group">
               <label>Location</label>
               <input type="text" id="userLocation" placeholder="e.g., Canada">
             </div>
@@ -461,15 +540,6 @@
         <button onclick="saveCategory()">Save Category</button>
         <button onclick="closeModal()" class="secondary">Cancel</button>
       </div>
-      
-      <h3 style="margin-top: 20px; margin-bottom: 10px;">Metrics for this Category</h3>
-      <div id="metricsContainer"></div>
-      <button onclick="addMetricField()" class="secondary">+ Add Metric</button>
-      
-      <div style="margin-top: 20px;">
-        <button onclick="saveCategory()">Save Category</button>
-        <button onclick="closeModal()" class="secondary">Cancel</button>
-      </div>
     </div>
   </div>
 
@@ -490,96 +560,15 @@
     let selectedCategory = null;
     let userProfile = {};
     let metricDefinitions = [];
-
-    // PERCENTILE FUNCTIONS LIBRARY
-    const percentileFunctions = {
-      // Net Worth Percentile (age-adjusted)
-      networth_percentile: (value, age) => {
-        const ageGroup = Math.floor(age / 10) * 10;
-        const benchmarks = {
-          20: [0, 5000, 15000, 50000, 100000],
-          30: [0, 20000, 50000, 150000, 300000],
-          40: [0, 50000, 150000, 400000, 800000],
-          50: [0, 100000, 300000, 750000, 1500000],
-          60: [0, 200000, 500000, 1200000, 2500000]
-        };
-        const bench = benchmarks[ageGroup] || benchmarks[30];
-        return calculatePercentileFromBenchmarks(value, bench);
-      },
-      
-      // Income Percentile (general US data approximation)
-      income_percentile: (value) => {
-        const benchmarks = [0, 25000, 40000, 60000, 85000, 120000, 180000, 300000];
-        return calculatePercentileFromBenchmarks(value, benchmarks);
-      },
-      
-      // Bench Press Percentile (male, age-adjusted, bodyweight ratio)
-      bench_press_percentile: (weight, age, bodyweight) => {
-        const ratio = weight / bodyweight;
-        const ageFactor = age < 30 ? 1.0 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
-        const adjustedRatio = ratio / ageFactor;
-        const benchmarks = [0, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-        return calculatePercentileFromBenchmarks(adjustedRatio, benchmarks);
-      },
-      
-      // IQ Percentile (standard distribution)
-      iq_percentile: (value) => {
-        const mean = 100;
-        const sd = 15;
-        const z = (value - mean) / sd;
-        return Math.round(cumulativeNormalDistribution(z) * 100);
-      },
-      
-      // 5K Run Time Percentile (minutes, age and gender adjusted)
-      run_5k_percentile: (minutes, age, gender) => {
-        const isMale = gender === 'male';
-        const ageFactor = age < 30 ? 1.0 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
-        
-        // Lower time = better, so we invert
-        const benchmarks = isMale ? 
-          [40, 30, 25, 22, 20, 18, 16] : 
-          [45, 35, 30, 27, 24, 21, 19];
-        
-        // Adjust for age
-        const adjusted = benchmarks.map(b => b / ageFactor);
-        // Invert because lower is better
-        const percentile = 100 - calculatePercentileFromBenchmarks(minutes, adjusted);
-        return Math.max(0, Math.min(100, percentile));
-      },
-      
-      // General strength percentile (bodyweight ratio)
-      strength_ratio_percentile: (weight, bodyweight) => {
-        const ratio = weight / bodyweight;
-        const benchmarks = [0, 0.3, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-        return calculatePercentileFromBenchmarks(ratio, benchmarks);
-      }
+    let chartSettings = {
+      scale: 'monthly',
+      units: 6,
+      customStart: null,
+      customEnd: null,
+      customAggregation: 'daily'
     };
 
-    // Helper: Calculate percentile from benchmark array
-    function calculatePercentileFromBenchmarks(value, benchmarks) {
-      if (value <= benchmarks[0]) return 0;
-      if (value >= benchmarks[benchmarks.length - 1]) return 100;
-      
-      for (let i = 0; i < benchmarks.length - 1; i++) {
-        if (value >= benchmarks[i] && value <= benchmarks[i + 1]) {
-          const range = benchmarks[i + 1] - benchmarks[i];
-          const position = value - benchmarks[i];
-          const percentInRange = position / range;
-          const percentileStart = (i / (benchmarks.length - 1)) * 100;
-          const percentileEnd = ((i + 1) / (benchmarks.length - 1)) * 100;
-          return Math.round(percentileStart + (percentileEnd - percentileStart) * percentInRange);
-        }
-      }
-      return 50;
-    }
-
-    // Helper: Cumulative normal distribution (for IQ calculation)
-    function cumulativeNormalDistribution(z) {
-      const t = 1 / (1 + 0.2316419 * Math.abs(z));
-      const d = 0.3989423 * Math.exp(-z * z / 2);
-      const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
-      return z > 0 ? 1 - prob : prob;
-    }
+    // percentileFunctions is now loaded from js/percentile/index.js
 
     // INITIALIZE
     async function init() {
@@ -607,6 +596,7 @@
         userProfile = data;
         document.getElementById("userAge").value = data.age || "";
         document.getElementById("userGender").value = data.gender || "";
+        document.getElementById("userWeight").value = data.weight || "";
         document.getElementById("userLocation").value = data.location || "";
       }
     }
@@ -615,6 +605,7 @@
     async function savePersonalInfo() {
       const age = parseInt(document.getElementById("userAge").value);
       const gender = document.getElementById("userGender").value;
+      const weight = parseFloat(document.getElementById("userWeight").value);
       const location = document.getElementById("userLocation").value;
 
       const { error } = await supabase
@@ -622,7 +613,8 @@
         .upsert({ 
           id: 1, 
           age, 
-          gender, 
+          gender,
+          weight,
           location,
           updated_at: new Date().toISOString()
         });
@@ -633,7 +625,7 @@
         return;
       }
 
-      userProfile = { age, gender, location };
+      userProfile = { age, gender, weight, location };
       document.getElementById("status").textContent = "✅ Personal info saved!";
     }
 
@@ -1043,10 +1035,37 @@
       const children = getChildren(path);
       const allPaths = children.length > 0 ? children.map(c => c.path) : [path];
 
+      // Calculate date range based on settings
+      const endDate = new Date();
+      let startDate = new Date();
+      
+      if (chartSettings.scale === 'custom') {
+        startDate = chartSettings.customStart ? new Date(chartSettings.customStart) : new Date(endDate - 180 * 24 * 60 * 60 * 1000);
+        endDate.setTime(chartSettings.customEnd ? new Date(chartSettings.customEnd).getTime() : Date.now());
+      } else {
+        const units = chartSettings.units || 6;
+        switch (chartSettings.scale) {
+          case 'daily':
+            startDate.setDate(startDate.getDate() - units);
+            break;
+          case 'weekly':
+            startDate.setDate(startDate.getDate() - units * 7);
+            break;
+          case 'monthly':
+            startDate.setMonth(startDate.getMonth() - units);
+            break;
+          case 'yearly':
+            startDate.setFullYear(startDate.getFullYear() - units);
+            break;
+        }
+      }
+
       const { data, error } = await supabase
         .from("metric_values")
         .select("*")
         .in("category_path", allPaths)
+        .gte("created_at", startDate.toISOString())
+        .lte("created_at", endDate.toISOString())
         .order("created_at", { ascending: true });
 
       if (error) return;
@@ -1054,9 +1073,17 @@
       const ctx = document.getElementById("detailChart");
       if (detailChart) detailChart.destroy();
 
+      // Determine aggregation level
+      const aggregationScale = chartSettings.scale === 'custom' ? 
+        chartSettings.customAggregation : 
+        getAggregationLevel(chartSettings.scale);
+
+      // Aggregate data
+      const aggregatedData = aggregateData(data, aggregationScale);
+
+      // Build datasets
       const datasets = {};
-      
-      data.forEach(entry => {
+      aggregatedData.forEach(entry => {
         const key = `${entry.category_path}_${entry.metric_name}`;
         if (!datasets[key]) {
           const cat = categoryStructure.find(c => c.path === entry.category_path);
@@ -1070,14 +1097,14 @@
       });
 
       const labels = [];
-      data.forEach(entry => {
-        const date = new Date(entry.created_at).toLocaleDateString();
-        if (!labels.includes(date)) labels.push(date);
+      aggregatedData.forEach(entry => {
+        const dateLabel = formatDateLabel(entry.date, aggregationScale);
+        if (!labels.includes(dateLabel)) labels.push(dateLabel);
         
         const key = `${entry.category_path}_${entry.metric_name}`;
         if (datasets[key] && entry.percentile !== null) {
           datasets[key].data.push({
-            x: date,
+            x: dateLabel,
             y: entry.percentile
           });
         }
@@ -1094,7 +1121,7 @@
           plugins: {
             title: { 
               display: true, 
-              text: "Historical Progress (Percentiles)",
+              text: `Historical Progress (${aggregationScale} averages)`,
               color: '#e0e0e0'
             },
             legend: {
@@ -1116,6 +1143,145 @@
           }
         }
       });
+    }
+
+    // Get aggregation level (one level below selected scale)
+    function getAggregationLevel(scale) {
+      const levels = ['daily', 'weekly', 'monthly', 'yearly'];
+      const currentIndex = levels.indexOf(scale);
+      return currentIndex > 0 ? levels[currentIndex - 1] : 'daily';
+    }
+
+    // Aggregate data by time period
+    function aggregateData(rawData, aggregationScale) {
+      const grouped = {};
+      
+      rawData.forEach(entry => {
+        const date = new Date(entry.created_at);
+        let periodKey;
+        
+        switch (aggregationScale) {
+          case 'daily':
+            periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+            break;
+          case 'weekly':
+            const weekStart = new Date(date);
+            weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+            periodKey = weekStart.toISOString().split('T')[0];
+            break;
+          case 'monthly':
+            periodKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            break;
+          case 'yearly':
+            periodKey = `${date.getFullYear()}`;
+            break;
+          default:
+            periodKey = date.toISOString().split('T')[0];
+        }
+        
+        const key = `${entry.category_path}_${entry.metric_name}_${periodKey}`;
+        
+        if (!grouped[key]) {
+          grouped[key] = {
+            category_path: entry.category_path,
+            metric_name: entry.metric_name,
+            date: periodKey,
+            percentiles: [],
+            values: []
+          };
+        }
+        
+        if (entry.percentile !== null) {
+          grouped[key].percentiles.push(entry.percentile);
+        }
+        if (entry.value !== null) {
+          grouped[key].values.push(entry.value);
+        }
+      });
+      
+      // Calculate averages
+      return Object.values(grouped).map(group => ({
+        category_path: group.category_path,
+        metric_name: group.metric_name,
+        date: group.date,
+        percentile: group.percentiles.length > 0 ? 
+          group.percentiles.reduce((a, b) => a + b) / group.percentiles.length : null,
+        value: group.values.length > 0 ?
+          group.values.reduce((a, b) => a + b) / group.values.length : null
+      }));
+    }
+
+    // Format date label based on aggregation
+    function formatDateLabel(dateStr, aggregationScale) {
+      const date = new Date(dateStr);
+      
+      switch (aggregationScale) {
+        case 'daily':
+          return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        case 'weekly':
+          return `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+        case 'monthly':
+          return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+        case 'yearly':
+          return date.getFullYear().toString();
+        default:
+          return date.toLocaleDateString();
+      }
+    }
+
+    // Update chart settings UI
+    function updateChartSettings() {
+      const scale = document.getElementById("timeScale").value;
+      const units = document.getElementById("timeUnits").value;
+      
+      chartSettings.scale = scale;
+      chartSettings.units = parseInt(units);
+      
+      // Update label
+      const labelMap = {
+        daily: 'days',
+        weekly: 'weeks',
+        monthly: 'months',
+        yearly: 'years'
+      };
+      document.getElementById("timeUnitsLabel").textContent = labelMap[scale] || '';
+      
+      // Show/hide custom date range
+      const customRange = document.getElementById("customDateRange");
+      if (scale === 'custom') {
+        customRange.style.display = 'block';
+        document.getElementById("timeUnits").disabled = true;
+        
+        // Set default dates if empty
+        if (!document.getElementById("customEndDate").value) {
+          document.getElementById("customEndDate").value = new Date().toISOString().split('T')[0];
+        }
+        if (!document.getElementById("customStartDate").value) {
+          const sixMonthsAgo = new Date();
+          sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+          document.getElementById("customStartDate").value = sixMonthsAgo.toISOString().split('T')[0];
+        }
+        
+        chartSettings.customStart = document.getElementById("customStartDate").value;
+        chartSettings.customEnd = document.getElementById("customEndDate").value;
+        chartSettings.customAggregation = document.getElementById("customAggregation").value;
+      } else {
+        customRange.style.display = 'none';
+        document.getElementById("timeUnits").disabled = false;
+      }
+    }
+
+    // Refresh chart with current settings
+    function refreshChart() {
+      if (chartSettings.scale === 'custom') {
+        chartSettings.customStart = document.getElementById("customStartDate").value;
+        chartSettings.customEnd = document.getElementById("customEndDate").value;
+        chartSettings.customAggregation = document.getElementById("customAggregation").value;
+      }
+      
+      if (selectedCategory) {
+        loadDetailChart(selectedCategory);
+      }
     }
 
     // LOAD SPIDER CHART
@@ -1222,44 +1388,82 @@
       document.getElementById("categoryModal").classList.add("active");
     }
 
+    function openEditCategoryModal(path) {
+      const category = categoryStructure.find(c => c.path === path);
+      if (!category) return;
+
+      document.getElementById("modalTitle").textContent = "Edit Category";
+      document.getElementById("modalEditPath").value = path;
+      document.getElementById("modalParentSelect").value = category.parent_path || "";
+      document.getElementById("modalCategoryName").value = category.name;
+      document.getElementById("modalCategoryIcon").value = category.icon || "";
+      
+      // Load existing metrics
+      const metrics = metricDefinitions.filter(m => m.category_path === path);
+      document.getElementById("metricsContainer").innerHTML = "";
+      metricFieldCounter = 0;
+      
+      metrics.forEach(metric => {
+        addMetricField(metric);
+      });
+
+      document.getElementById("categoryModal").classList.add("active");
+    }
+
     function closeModal() {
       document.getElementById("categoryModal").classList.remove("active");
     }
 
-    function addMetricField() {
+    function addMetricField(existingMetric = null) {
       const container = document.getElementById("metricsContainer");
       const id = metricFieldCounter++;
       
       const div = document.createElement("div");
       div.className = "metric-input-group";
       div.id = `metricField_${id}`;
+      
+      const metricId = existingMetric ? existingMetric.id : null;
+      
       div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <strong>Metric ${id + 1}</strong>
           <button onclick="removeMetricField(${id})" class="danger" style="padding: 5px 10px;">Remove</button>
         </div>
+        ${metricId ? `<input type="hidden" id="metricId_${id}" value="${metricId}">` : ''}
         <div class="form-group">
           <label>Metric Name</label>
-          <input type="text" id="metricName_${id}" placeholder="e.g., Net Worth">
+          <input type="text" id="metricName_${id}" placeholder="e.g., Net Worth" value="${existingMetric?.metric_name || ''}">
         </div>
         <div class="form-group">
           <label>Unit</label>
-          <input type="text" id="metricUnit_${id}" placeholder="e.g., USD, lbs, minutes">
+          <input type="text" id="metricUnit_${id}" placeholder="e.g., USD, lbs, minutes" value="${existingMetric?.unit || ''}">
         </div>
         <div class="form-group">
           <label>Percentile Function (optional)</label>
           <select id="metricFunc_${id}">
             <option value="">None (manual entry)</option>
-            <option value="networth_percentile">Net Worth (age-adjusted)</option>
-            <option value="income_percentile">Income</option>
-            <option value="bench_press_percentile">Bench Press (weight/bodyweight)</option>
-            <option value="iq_percentile">IQ</option>
-            <option value="run_5k_percentile">5K Run Time</option>
-            <option value="strength_ratio_percentile">Strength Ratio</option>
+            ${getPercentileFunctionOptions(existingMetric?.percentile_function)}
           </select>
         </div>
       `;
       container.appendChild(div);
+    }
+
+    function getPercentileFunctionOptions(selectedFunc = null) {
+      const functions = [
+        { value: 'networth_percentile', label: 'Net Worth (age-adjusted)', category: 'financial' },
+        { value: 'income_percentile', label: 'Income', category: 'financial' },
+        { value: 'bench_press_percentile', label: 'Bench Press (weight/bodyweight)', category: 'physical' },
+        { value: 'squat_percentile', label: 'Squat (weight/bodyweight)', category: 'physical' },
+        { value: 'deadlift_percentile', label: 'Deadlift (weight/bodyweight)', category: 'physical' },
+        { value: 'iq_percentile', label: 'IQ', category: 'cognitive' },
+        { value: 'run_5k_percentile', label: '5K Run Time', category: 'physical' },
+        { value: 'strength_ratio_percentile', label: 'Strength Ratio', category: 'physical' }
+      ];
+
+      return functions.map(f => 
+        `<option value="${f.value}" ${f.value === selectedFunc ? 'selected' : ''}>${f.label}</option>`
+      ).join('');
     }
 
     function removeMetricField(id) {
@@ -1280,47 +1484,89 @@
         return;
       }
 
-      const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      const path = parentPath ? `${parentPath}.${safeName}` : safeName;
+      let path = editPath;
+      
+      if (!isEdit) {
+        // Creating new category
+        const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        path = parentPath ? `${parentPath}.${safeName}` : safeName;
 
-      const { error: catError } = await supabase.from("category_structure").insert([{
-        path,
-        name,
-        icon: icon || "📊",
-        parent_path: parentPath || null
-      }]);
+        const { error: catError } = await supabase.from("category_structure").insert([{
+          path,
+          name,
+          icon: icon || "",
+          parent_path: parentPath || null
+        }]);
 
-      if (catError) {
-        console.error(catError);
-        alert("Failed to add category");
-        return;
+        if (catError) {
+          console.error(catError);
+          alert("Failed to add category");
+          return;
+        }
+      } else {
+        // Editing existing category
+        const { error: catError } = await supabase
+          .from("category_structure")
+          .update({
+            name,
+            icon: icon || ""
+          })
+          .eq("path", path);
+
+        if (catError) {
+          console.error(catError);
+          alert("Failed to update category");
+          return;
+        }
+
+        // Delete removed metrics and update existing ones
+        const existingMetrics = metricDefinitions.filter(m => m.category_path === path);
+        const metricsToKeep = [];
+        
+        for (let i = 0; i < metricFieldCounter; i++) {
+          const metricIdField = document.getElementById(`metricId_${i}`);
+          if (metricIdField) {
+            metricsToKeep.push(metricIdField.value);
+          }
+        }
+
+        // Delete metrics not in the form
+        for (const metric of existingMetrics) {
+          if (!metricsToKeep.includes(metric.id)) {
+            await supabase.from("metric_definitions").delete().eq("id", metric.id);
+          }
+        }
       }
 
-      // Save metrics
-      const metrics = [];
+      // Save/update metrics
       for (let i = 0; i < metricFieldCounter; i++) {
         const nameField = document.getElementById(`metricName_${i}`);
         if (!nameField) continue;
         
+        const metricId = document.getElementById(`metricId_${i}`)?.value;
         const metricName = nameField.value;
         const unit = document.getElementById(`metricUnit_${i}`).value;
         const func = document.getElementById(`metricFunc_${i}`).value;
 
         if (metricName && unit) {
-          metrics.push({
+          const metricData = {
             category_path: path,
             metric_name: metricName,
             unit,
             percentile_function: func || null,
             parameters: func ? getParametersForFunction(func) : null
-          });
-        }
-      }
+          };
 
-      if (metrics.length > 0) {
-        const { error: metricError } = await supabase.from("metric_definitions").insert(metrics);
-        if (metricError) {
-          console.error(metricError);
+          if (metricId) {
+            // Update existing metric
+            await supabase
+              .from("metric_definitions")
+              .update(metricData)
+              .eq("id", metricId);
+          } else {
+            // Insert new metric
+            await supabase.from("metric_definitions").insert([metricData]);
+          }
         }
       }
 
@@ -1329,18 +1575,6 @@
       await loadMetricDefinitions();
       renderCategoryHierarchy();
       document.getElementById("status").textContent = isEdit ? "✅ Category updated!" : "✅ Category added!";
-    }
-
-    function getParametersForFunction(funcName) {
-      const paramMap = {
-        networth_percentile: ["value", "age"],
-        income_percentile: ["value"],
-        bench_press_percentile: ["weight", "age", "bodyweight"],
-        iq_percentile: ["value"],
-        run_5k_percentile: ["minutes", "age", "gender"],
-        strength_ratio_percentile: ["weight", "bodyweight"]
-      };
-      return paramMap[funcName] || ["value"];
     }
 
     function getParametersForFunction(funcName) {
@@ -1370,7 +1604,7 @@
             ` (${metrics.length} metric${metrics.length > 1 ? 's' : ''})` : '';
           
           item.innerHTML = `
-            <span>${cat.icon} ${cat.name}${metricsText}</span>
+            <span>${cat.icon || ""}${cat.icon ? " " : ""}${cat.name}${metricsText}</span>
             <div>
               <button onclick="openEditCategoryModal('${cat.path}')" class="secondary" style="padding: 5px 10px; font-size: 14px;">Edit</button>
               <button onclick="deleteCategory('${cat.path}')" class="danger" style="padding: 5px 10px; font-size: 14px;">Delete</button>
