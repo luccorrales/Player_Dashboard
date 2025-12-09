@@ -416,6 +416,10 @@
               </select>
             </div>
             <div class="form-group">
+              <label>Weight (lbs or kg)</label>
+              <input type="number" id="userWeight" placeholder="e.g., 180">
+            </div>
+            <div class="form-group">
               <label>Location</label>
               <input type="text" id="userLocation" placeholder="e.g., Canada">
             </div>
@@ -433,10 +437,11 @@
     </div>
   </div>
 
-  <!-- MODAL FOR ADDING CATEGORIES -->
+  <!-- MODAL FOR ADDING/EDITING CATEGORIES -->
   <div id="categoryModal" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle">Add Category</h2>
+      <input type="hidden" id="modalEditPath">
       <div class="form-group">
         <label>Parent Category (optional)</label>
         <select id="modalParentSelect">
@@ -448,8 +453,8 @@
         <input type="text" id="modalCategoryName" placeholder="e.g., Strength Training">
       </div>
       <div class="form-group">
-        <label>Icon (emoji)</label>
-        <input type="text" id="modalCategoryIcon" placeholder="💪" maxlength="2">
+        <label>Icon (emoji, optional)</label>
+        <input type="text" id="modalCategoryIcon" placeholder="Leave empty for no icon" maxlength="2">
       </div>
       
       <h3 style="margin-top: 20px; margin-bottom: 10px;">Metrics for this Category</h3>
@@ -463,6 +468,12 @@
     </div>
   </div>
 
+  <script src="js/percentile/index.js"></script>
+  <script src="js/percentile/percentile-physical.js"></script>
+  <script src="js/percentile/percentile-cognitive.js"></script>
+  <script src="js/percentile/percentile-financial.js"></script>
+  <script src="js/percentile/percentile-social.js"></script>
+  <script src="js/percentile/percentile-emotional.js"></script>
   <script>
     const SUPABASE_URL = "https://sugekxazhhxmbzncqxyg.supabase.co";
     const SUPABASE_KEY = "sb_publishable_84h5tEu4ALMHkJWBxQeYdw_WqSSJiKd";
@@ -474,6 +485,8 @@
     let selectedCategory = null;
     let userProfile = {};
     let metricDefinitions = [];
+
+    // percentileFunctions is now loaded from js/percentile/index.js
 
     // INITIALIZE
     async function init() {
@@ -501,6 +514,7 @@
         userProfile = data;
         document.getElementById("userAge").value = data.age || "";
         document.getElementById("userGender").value = data.gender || "";
+        document.getElementById("userWeight").value = data.weight || "";
         document.getElementById("userLocation").value = data.location || "";
       }
     }
@@ -509,6 +523,7 @@
     async function savePersonalInfo() {
       const age = parseInt(document.getElementById("userAge").value);
       const gender = document.getElementById("userGender").value;
+      const weight = parseFloat(document.getElementById("userWeight").value);
       const location = document.getElementById("userLocation").value;
 
       const { error } = await supabase
@@ -516,7 +531,8 @@
         .upsert({ 
           id: 1, 
           age, 
-          gender, 
+          gender,
+          weight,
           location,
           updated_at: new Date().toISOString()
         });
@@ -527,7 +543,7 @@
         return;
       }
 
-      userProfile = { age, gender, location };
+      userProfile = { age, gender, weight, location };
       document.getElementById("status").textContent = "✅ Personal info saved!";
     }
 
@@ -636,10 +652,15 @@
       
       function addOptions(cats, prefix = "") {
         cats.forEach(cat => {
-          const option = document.createElement("option");
-          option.value = cat.path;
-          option.textContent = prefix + cat.icon + " " + cat.name;
-          pathSelect.appendChild(option);
+          // Only add categories that have metrics defined
+          const hasMetrics = metricDefinitions.some(m => m.category_path === cat.path);
+          
+          if (hasMetrics) {
+            const option = document.createElement("option");
+            option.value = cat.path;
+            option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
+            pathSelect.appendChild(option);
+          }
           
           if (cat.children && cat.children.length > 0) {
             addOptions(cat.children, prefix + "  ");
@@ -1092,6 +1113,7 @@
 
     function openAddCategoryModal() {
       document.getElementById("modalTitle").textContent = "Add Top-Level Category";
+      document.getElementById("modalEditPath").value = "";
       document.getElementById("modalParentSelect").value = "";
       document.getElementById("modalCategoryName").value = "";
       document.getElementById("modalCategoryIcon").value = "";
@@ -1102,6 +1124,7 @@
 
     function openAddSubCategoryModal() {
       document.getElementById("modalTitle").textContent = "Add Sub-Category";
+      document.getElementById("modalEditPath").value = "";
       document.getElementById("modalCategoryName").value = "";
       document.getElementById("modalCategoryIcon").value = "";
       document.getElementById("metricsContainer").innerHTML = "";
@@ -1109,44 +1132,82 @@
       document.getElementById("categoryModal").classList.add("active");
     }
 
+    function openEditCategoryModal(path) {
+      const category = categoryStructure.find(c => c.path === path);
+      if (!category) return;
+
+      document.getElementById("modalTitle").textContent = "Edit Category";
+      document.getElementById("modalEditPath").value = path;
+      document.getElementById("modalParentSelect").value = category.parent_path || "";
+      document.getElementById("modalCategoryName").value = category.name;
+      document.getElementById("modalCategoryIcon").value = category.icon || "";
+      
+      // Load existing metrics
+      const metrics = metricDefinitions.filter(m => m.category_path === path);
+      document.getElementById("metricsContainer").innerHTML = "";
+      metricFieldCounter = 0;
+      
+      metrics.forEach(metric => {
+        addMetricField(metric);
+      });
+
+      document.getElementById("categoryModal").classList.add("active");
+    }
+
     function closeModal() {
       document.getElementById("categoryModal").classList.remove("active");
     }
 
-    function addMetricField() {
+    function addMetricField(existingMetric = null) {
       const container = document.getElementById("metricsContainer");
       const id = metricFieldCounter++;
       
       const div = document.createElement("div");
       div.className = "metric-input-group";
       div.id = `metricField_${id}`;
+      
+      const metricId = existingMetric ? existingMetric.id : null;
+      
       div.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <strong>Metric ${id + 1}</strong>
           <button onclick="removeMetricField(${id})" class="danger" style="padding: 5px 10px;">Remove</button>
         </div>
+        ${metricId ? `<input type="hidden" id="metricId_${id}" value="${metricId}">` : ''}
         <div class="form-group">
           <label>Metric Name</label>
-          <input type="text" id="metricName_${id}" placeholder="e.g., Net Worth">
+          <input type="text" id="metricName_${id}" placeholder="e.g., Net Worth" value="${existingMetric?.metric_name || ''}">
         </div>
         <div class="form-group">
           <label>Unit</label>
-          <input type="text" id="metricUnit_${id}" placeholder="e.g., USD, lbs, minutes">
+          <input type="text" id="metricUnit_${id}" placeholder="e.g., USD, lbs, minutes" value="${existingMetric?.unit || ''}">
         </div>
         <div class="form-group">
           <label>Percentile Function (optional)</label>
           <select id="metricFunc_${id}">
             <option value="">None (manual entry)</option>
-            <option value="networth_percentile">Net Worth (age-adjusted)</option>
-            <option value="income_percentile">Income</option>
-            <option value="bench_press_percentile">Bench Press (weight/bodyweight)</option>
-            <option value="iq_percentile">IQ</option>
-            <option value="run_5k_percentile">5K Run Time</option>
-            <option value="strength_ratio_percentile">Strength Ratio</option>
+            ${getPercentileFunctionOptions(existingMetric?.percentile_function)}
           </select>
         </div>
       `;
       container.appendChild(div);
+    }
+
+    function getPercentileFunctionOptions(selectedFunc = null) {
+      const functions = [
+        { value: 'networth_percentile', label: 'Net Worth (age-adjusted)', category: 'financial' },
+        { value: 'income_percentile', label: 'Income', category: 'financial' },
+        { value: 'bench_press_percentile', label: 'Bench Press (weight/bodyweight)', category: 'physical' },
+        { value: 'squat_percentile', label: 'Squat (weight/bodyweight)', category: 'physical' },
+        { value: 'deadlift_percentile', label: 'Deadlift (weight/bodyweight)', category: 'physical' },
+        { value: 'iq_percentile', label: 'IQ', category: 'cognitive' },
+        { value: 'run_5k_percentile', label: '5K Run Time', category: 'physical' },
+        { value: 'strength_ratio_percentile', label: 'Strength Ratio', category: 'physical' }
+      ];
+
+      return functions.map(f => 
+        `<option value="${f.value}" ${f.value === selectedFunc ? 'selected' : ''}>${f.label}</option>`
+      ).join('');
     }
 
     function removeMetricField(id) {
@@ -1155,6 +1216,9 @@
     }
 
     async function saveCategory() {
+      const editPath = document.getElementById("modalEditPath").value;
+      const isEdit = !!editPath;
+      
       const parentPath = document.getElementById("modalParentSelect").value;
       const name = document.getElementById("modalCategoryName").value;
       const icon = document.getElementById("modalCategoryIcon").value;
@@ -1164,47 +1228,89 @@
         return;
       }
 
-      const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      const path = parentPath ? `${parentPath}.${safeName}` : safeName;
+      let path = editPath;
+      
+      if (!isEdit) {
+        // Creating new category
+        const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        path = parentPath ? `${parentPath}.${safeName}` : safeName;
 
-      const { error: catError } = await supabase.from("category_structure").insert([{
-        path,
-        name,
-        icon: icon || "📊",
-        parent_path: parentPath || null
-      }]);
+        const { error: catError } = await supabase.from("category_structure").insert([{
+          path,
+          name,
+          icon: icon || "",
+          parent_path: parentPath || null
+        }]);
 
-      if (catError) {
-        console.error(catError);
-        alert("Failed to add category");
-        return;
+        if (catError) {
+          console.error(catError);
+          alert("Failed to add category");
+          return;
+        }
+      } else {
+        // Editing existing category
+        const { error: catError } = await supabase
+          .from("category_structure")
+          .update({
+            name,
+            icon: icon || ""
+          })
+          .eq("path", path);
+
+        if (catError) {
+          console.error(catError);
+          alert("Failed to update category");
+          return;
+        }
+
+        // Delete removed metrics and update existing ones
+        const existingMetrics = metricDefinitions.filter(m => m.category_path === path);
+        const metricsToKeep = [];
+        
+        for (let i = 0; i < metricFieldCounter; i++) {
+          const metricIdField = document.getElementById(`metricId_${i}`);
+          if (metricIdField) {
+            metricsToKeep.push(metricIdField.value);
+          }
+        }
+
+        // Delete metrics not in the form
+        for (const metric of existingMetrics) {
+          if (!metricsToKeep.includes(metric.id)) {
+            await supabase.from("metric_definitions").delete().eq("id", metric.id);
+          }
+        }
       }
 
-      // Save metrics
-      const metrics = [];
+      // Save/update metrics
       for (let i = 0; i < metricFieldCounter; i++) {
         const nameField = document.getElementById(`metricName_${i}`);
         if (!nameField) continue;
         
+        const metricId = document.getElementById(`metricId_${i}`)?.value;
         const metricName = nameField.value;
         const unit = document.getElementById(`metricUnit_${i}`).value;
         const func = document.getElementById(`metricFunc_${i}`).value;
 
         if (metricName && unit) {
-          metrics.push({
+          const metricData = {
             category_path: path,
             metric_name: metricName,
             unit,
             percentile_function: func || null,
             parameters: func ? getParametersForFunction(func) : null
-          });
-        }
-      }
+          };
 
-      if (metrics.length > 0) {
-        const { error: metricError } = await supabase.from("metric_definitions").insert(metrics);
-        if (metricError) {
-          console.error(metricError);
+          if (metricId) {
+            // Update existing metric
+            await supabase
+              .from("metric_definitions")
+              .update(metricData)
+              .eq("id", metricId);
+          } else {
+            // Insert new metric
+            await supabase.from("metric_definitions").insert([metricData]);
+          }
         }
       }
 
@@ -1212,7 +1318,7 @@
       await loadCategoryStructure();
       await loadMetricDefinitions();
       renderCategoryHierarchy();
-      document.getElementById("status").textContent = "✅ Category added!";
+      document.getElementById("status").textContent = isEdit ? "✅ Category updated!" : "✅ Category added!";
     }
 
     function getParametersForFunction(funcName) {
@@ -1242,8 +1348,9 @@
             ` (${metrics.length} metric${metrics.length > 1 ? 's' : ''})` : '';
           
           item.innerHTML = `
-            <span>${cat.icon} ${cat.name}${metricsText}</span>
+            <span>${cat.icon || ""}${cat.icon ? " " : ""}${cat.name}${metricsText}</span>
             <div>
+              <button onclick="openEditCategoryModal('${cat.path}')" class="secondary" style="padding: 5px 10px; font-size: 14px;">Edit</button>
               <button onclick="deleteCategory('${cat.path}')" class="danger" style="padding: 5px 10px; font-size: 14px;">Delete</button>
             </div>
           `;
@@ -1329,16 +1436,5 @@
 
     init();
   </script>
-  <script type="module">
-  import { percentileFunctions } from "./js/percentile/index.js";
-  import { calculatePercentileFromBenchmarks, cumulativeNormalDistribution } 
-    from "./js/percentile/percentile-utils.js";
-
-  // Make imported functions globally available to existing code
-  window.percentileFunctions = percentileFunctions;
-  window.calculatePercentileFromBenchmarks = calculatePercentileFromBenchmarks;
-  window.cumulativeNormalDistribution = cumulativeNormalDistribution;
-</script>
-
 </body>
 </html>
