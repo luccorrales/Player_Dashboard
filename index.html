@@ -756,12 +756,6 @@
             option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
             pathSelect.appendChild(option);
           }
-
-          // Add ALL categories to the MODAL PARENT dropdown (as they can be parents)
-          const parentOption = document.createElement("option");
-          parentOption.value = cat.path;
-          parentOption.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
-          parentSelect.appendChild(parentOption); // <-- Append directly to parentSelect
           
           if (cat.children && cat.children.length > 0) {
             addOptions(cat.children, prefix + "  ");
