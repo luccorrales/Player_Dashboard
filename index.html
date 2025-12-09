@@ -572,16 +572,27 @@
 
     // INITIALIZE
     async function init() {
-      document.getElementById("status").textContent = "✅ Connected to Supabase";
-      await loadPersonalInfo();
-      const categoriesLoaded = await loadCategoryStructure();
+      // 1. Initial status update (Keep for connection check)
+      document.getElementById("status").textContent = "✅ Connected to Supabase"; 
       
+      // 2. Load necessary reference data first
+      await loadPersonalInfo();
+      
+      // Load categories (structure)
+      const categoriesLoaded = await loadCategoryStructure(false); // <--- Pass false to suppress internal population
+      
+      // 3. Load metric definitions (CRITICAL: Must happen before population)
       if (categoriesLoaded) {
-        await loadMetricDefinitions();
+        await loadMetricDefinitions(); 
+        
+        // 4. Now that metrics are defined, populate selectors and continue initialization
+        populateCategorySelectors(); // <--- Manual call after metrics are loaded
+    
         await loadWeights();
         await loadDashboard();
+        document.getElementById("status").textContent = "✅ Dashboard initialized and connected!";
       } else {
-        document.getElementById("status").textContent = "❌ Failed to load categories";
+        document.getElementById("status").textContent = "❌ Critical: Failed to load categories and defaults.";
       }
     }
 
@@ -642,7 +653,7 @@
     }
 
     // LOAD CATEGORY STRUCTURE
-    async function loadCategoryStructure() {
+    async function loadCategoryStructure(doPopulate = true) {
       const { data, error } = await supabase
         .from("category_structure")
         .select("*")
@@ -662,7 +673,9 @@
       }
 
       categoryStructure = data;
-      populateCategorySelectors();
+      if (doPopulate) {
+        populateCategorySelectors(); // Only run if flag is true
+      }
       return true;
     }
 
