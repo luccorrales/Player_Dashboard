@@ -4,14 +4,14 @@ import {
   cumulativeNormalDistribution,
 } from "./percentile-utils.js";
 
-export const physicalPercentiles = {
-  bench_press_percentile(weight, age, bodyweight) {
-    const ratio = weight / bodyweight;
-    const ageFactor = age < 30 ? 1 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
-    const adjustedRatio = ratio / ageFactor;
-    const benchmarks = [0, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
-    return calculatePercentileFromBenchmarks(adjustedRatio, benchmarks);
-  },
+// export const physicalPercentiles = {
+//   bench_press_percentile(weight, age, bodyweight) {
+//     const ratio = weight / bodyweight;
+//     const ageFactor = age < 30 ? 1 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
+//     const adjustedRatio = ratio / ageFactor;
+//     const benchmarks = [0, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+//     return calculatePercentileFromBenchmarks(adjustedRatio, benchmarks);
+//   },
 
   strength_ratio_percentile(weight, bodyweight) {
     const ratio = weight / bodyweight;
