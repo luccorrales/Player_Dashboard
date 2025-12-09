@@ -10,9 +10,10 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
       min-height: 100vh;
       padding: 20px;
+      color: #e0e0e0;
     }
     .container { max-width: 1400px; margin: 0 auto; }
     h1 {
@@ -20,15 +21,18 @@
       text-align: center;
       margin-bottom: 30px;
       font-size: 2.5em;
-      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
     }
+    h2 { color: #e0e0e0; }
     .status {
-      background: white;
+      background: #2a2a3e;
       padding: 15px;
       border-radius: 10px;
       margin-bottom: 20px;
       text-align: center;
       font-weight: bold;
+      color: #fff;
+      border: 1px solid #667eea;
     }
     .tabs {
       display: flex;
@@ -37,17 +41,17 @@
       flex-wrap: wrap;
     }
     .tab {
-      background: rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
       color: white;
-      border: none;
+      border: 1px solid rgba(255,255,255,0.2);
       padding: 12px 24px;
       border-radius: 8px;
       cursor: pointer;
       font-size: 16px;
       transition: all 0.3s;
     }
-    .tab:hover { background: rgba(255,255,255,0.3); }
-    .tab.active { background: white; color: #667eea; }
+    .tab:hover { background: rgba(255,255,255,0.2); }
+    .tab.active { background: #667eea; color: white; border-color: #667eea; }
     .content { display: none; }
     .content.active { display: block; }
     
@@ -63,25 +67,27 @@
     }
     
     .spider-chart-container {
-      background: white;
+      background: #2a2a3e;
       border-radius: 15px;
       padding: 25px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid #3a3a4e;
     }
     
     .category-selector {
-      background: white;
+      background: #2a2a3e;
       border-radius: 15px;
       padding: 25px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid #3a3a4e;
     }
     
     .category-btn {
       width: 100%;
       padding: 15px;
       margin-bottom: 10px;
-      background: #f3f4f6;
-      border: 2px solid transparent;
+      background: #1a1a2e;
+      border: 2px solid #3a3a4e;
       border-radius: 10px;
       cursor: pointer;
       font-size: 16px;
@@ -90,9 +96,10 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      color: #e0e0e0;
     }
     
-    .category-btn:hover { background: #e5e7eb; }
+    .category-btn:hover { background: #252538; border-color: #667eea; }
     .category-btn.selected { 
       background: #667eea; 
       color: white; 
@@ -100,11 +107,12 @@
     }
     
     .detail-panel {
-      background: white;
+      background: #2a2a3e;
       border-radius: 15px;
       padding: 25px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
       margin-top: 20px;
+      border: 1px solid #3a3a4e;
     }
     
     .stat-grid {
@@ -115,22 +123,25 @@
     }
     
     .stat-item {
-      background: #f3f4f6;
+      background: #1a1a2e;
       padding: 15px;
       border-radius: 10px;
       border-left: 4px solid #667eea;
+      transition: all 0.3s;
     }
+    
+    .stat-item:hover { background: #252538; transform: translateY(-2px); }
     
     .stat-item h4 {
       font-size: 0.9em;
-      color: #666;
+      color: #999;
       margin-bottom: 8px;
     }
     
     .stat-value {
       font-size: 1.8em;
       font-weight: bold;
-      color: #333;
+      color: #fff;
     }
     
     .stat-percentile {
@@ -140,17 +151,19 @@
     }
     
     .history-chart {
-      background: white;
+      background: #2a2a3e;
       border-radius: 15px;
       padding: 25px;
       margin-top: 20px;
+      border: 1px solid #3a3a4e;
     }
     
     .input-section {
-      background: white;
+      background: #2a2a3e;
       border-radius: 15px;
       padding: 25px;
       margin-bottom: 20px;
+      border: 1px solid #3a3a4e;
     }
     .form-group {
       margin-bottom: 15px;
@@ -159,14 +172,20 @@
       display: block;
       margin-bottom: 5px;
       font-weight: bold;
-      color: #333;
+      color: #e0e0e0;
     }
     select, input, textarea {
       width: 100%;
       padding: 12px;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #3a3a4e;
       border-radius: 8px;
       font-size: 16px;
+      background: #1a1a2e;
+      color: #e0e0e0;
+    }
+    select:focus, input:focus, textarea:focus {
+      outline: none;
+      border-color: #667eea;
     }
     button {
       background: #667eea;
@@ -178,12 +197,13 @@
       cursor: pointer;
       transition: background 0.3s;
       margin-right: 10px;
+      margin-bottom: 10px;
     }
     button:hover { background: #5568d3; }
     button.secondary {
-      background: #6b7280;
+      background: #4a4a5e;
     }
-    button.secondary:hover { background: #4b5563; }
+    button.secondary:hover { background: #5a5a6e; }
     button.danger {
       background: #ef4444;
     }
@@ -191,19 +211,20 @@
     
     .hierarchy-tree {
       margin-left: 20px;
-      border-left: 2px solid #e5e7eb;
+      border-left: 2px solid #3a3a4e;
       padding-left: 15px;
       margin-top: 10px;
     }
     
     .hierarchy-item {
-      background: #f9fafb;
+      background: #1a1a2e;
       padding: 10px;
       margin: 5px 0;
       border-radius: 5px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      border: 1px solid #3a3a4e;
     }
     
     .overall-score {
@@ -213,9 +234,9 @@
       padding: 40px;
       text-align: center;
       margin-bottom: 30px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
     }
-    .overall-score h2 { font-size: 2.5em; margin-bottom: 10px; }
+    .overall-score h2 { font-size: 2.5em; margin-bottom: 10px; color: white; }
     .overall-score .score { font-size: 5em; font-weight: bold; }
     
     .modal {
@@ -225,7 +246,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.8);
       z-index: 1000;
       align-items: center;
       justify-content: center;
@@ -234,22 +255,65 @@
     .modal.active { display: flex; }
     
     .modal-content {
-      background: white;
+      background: #2a2a3e;
       padding: 30px;
       border-radius: 15px;
-      max-width: 500px;
+      max-width: 600px;
       width: 90%;
       max-height: 80vh;
       overflow-y: auto;
+      border: 1px solid #3a3a4e;
     }
     
     .breadcrumb {
-      background: #f3f4f6;
+      background: #1a1a2e;
       padding: 10px 15px;
       border-radius: 8px;
       margin-bottom: 15px;
       font-size: 0.9em;
-      color: #666;
+      color: #999;
+      border: 1px solid #3a3a4e;
+    }
+    
+    .metric-input-group {
+      background: #1a1a2e;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #3a3a4e;
+    }
+    
+    .metric-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .calculated-percentile {
+      background: #667eea;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 0.85em;
+      font-weight: bold;
+    }
+    
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .settings-card {
+      background: #1a1a2e;
+      padding: 20px;
+      border-radius: 10px;
+      border: 1px solid #3a3a4e;
+    }
+    
+    .settings-card h3 {
+      margin-bottom: 15px;
+      color: #667eea;
     }
   </style>
 </head>
@@ -299,37 +363,25 @@
     <!-- INPUT TAB -->
     <div id="input" class="content">
       <div class="input-section">
-        <h2>Add New Stat Entry</h2>
+        <h2>Add New Metric Values</h2>
         <div class="breadcrumb" id="inputBreadcrumb">Select category path</div>
         <div class="form-group">
           <label>Category Path</label>
-          <select id="categoryPathSelect" onchange="updateInputPath()">
+          <select id="categoryPathSelect" onchange="updateMetricInputs()">
             <option value="">Select...</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Raw Value (optional)</label>
-          <input type="number" id="valueInput" placeholder="e.g., 75kg, 120 IQ, $50000">
-        </div>
-        <div class="form-group">
-          <label>Percentile (0-100)</label>
-          <input type="number" id="percentileInput" placeholder="e.g., 75" min="0" max="100" required>
-        </div>
+        <div id="metricInputsContainer"></div>
         <div class="form-group">
           <label>Comparison Group</label>
           <select id="comparisonGroup">
-            <option value="age_25-30">Age 25-30</option>
-            <option value="age_30-35">Age 30-35</option>
-            <option value="profession_tech">Tech Industry</option>
-            <option value="location_canada">Canada</option>
+            <option value="age_group">My Age Group</option>
+            <option value="gender">My Gender</option>
+            <option value="age_and_gender">Age + Gender</option>
             <option value="general">General Population</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>Notes (optional)</label>
-          <textarea id="notesInput" rows="3" placeholder="Context, how you measured this, etc."></textarea>
-        </div>
-        <button onclick="addStatEntry()">Add Entry</button>
+        <button onclick="addMetricValues()">Add Values</button>
       </div>
     </div>
 
@@ -346,8 +398,35 @@
     <!-- SETTINGS TAB -->
     <div id="settings" class="content">
       <div class="input-section">
+        <h2>Personal Information</h2>
+        <div class="settings-grid">
+          <div class="settings-card">
+            <h3>Basic Info</h3>
+            <div class="form-group">
+              <label>Age</label>
+              <input type="number" id="userAge" placeholder="e.g., 28">
+            </div>
+            <div class="form-group">
+              <label>Gender</label>
+              <select id="userGender">
+                <option value="">Select...</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Location</label>
+              <input type="text" id="userLocation" placeholder="e.g., Canada">
+            </div>
+            <button onclick="savePersonalInfo()">Save Personal Info</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="input-section" style="margin-top: 20px;">
         <h2>Category Importance Weights</h2>
-        <p style="margin-bottom: 20px; color: #666;">Adjust how much each domain matters to you (1-10)</p>
+        <p style="margin-bottom: 20px; color: #999;">Adjust how much each domain matters to you (1-10)</p>
         <div id="weightsForm"></div>
         <button onclick="saveWeights()">Save Weights</button>
       </div>
@@ -372,8 +451,15 @@
         <label>Icon (emoji)</label>
         <input type="text" id="modalCategoryIcon" placeholder="💪" maxlength="2">
       </div>
-      <button onclick="saveCategory()">Save</button>
-      <button onclick="closeModal()" class="secondary">Cancel</button>
+      
+      <h3 style="margin-top: 20px; margin-bottom: 10px;">Metrics for this Category</h3>
+      <div id="metricsContainer"></div>
+      <button onclick="addMetricField()" class="secondary">+ Add Metric</button>
+      
+      <div style="margin-top: 20px;">
+        <button onclick="saveCategory()">Save Category</button>
+        <button onclick="closeModal()" class="secondary">Cancel</button>
+      </div>
     </div>
   </div>
 
@@ -386,21 +472,153 @@
     let spiderChart, detailChart;
     let currentWeights = {};
     let selectedCategory = null;
+    let userProfile = {};
+    let metricDefinitions = [];
+
+    // PERCENTILE FUNCTIONS LIBRARY
+    const percentileFunctions = {
+      // Net Worth Percentile (age-adjusted)
+      networth_percentile: (value, age) => {
+        const ageGroup = Math.floor(age / 10) * 10;
+        const benchmarks = {
+          20: [0, 5000, 15000, 50000, 100000],
+          30: [0, 20000, 50000, 150000, 300000],
+          40: [0, 50000, 150000, 400000, 800000],
+          50: [0, 100000, 300000, 750000, 1500000],
+          60: [0, 200000, 500000, 1200000, 2500000]
+        };
+        const bench = benchmarks[ageGroup] || benchmarks[30];
+        return calculatePercentileFromBenchmarks(value, bench);
+      },
+      
+      // Income Percentile (general US data approximation)
+      income_percentile: (value) => {
+        const benchmarks = [0, 25000, 40000, 60000, 85000, 120000, 180000, 300000];
+        return calculatePercentileFromBenchmarks(value, benchmarks);
+      },
+      
+      // Bench Press Percentile (male, age-adjusted, bodyweight ratio)
+      bench_press_percentile: (weight, age, bodyweight) => {
+        const ratio = weight / bodyweight;
+        const ageFactor = age < 30 ? 1.0 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
+        const adjustedRatio = ratio / ageFactor;
+        const benchmarks = [0, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+        return calculatePercentileFromBenchmarks(adjustedRatio, benchmarks);
+      },
+      
+      // IQ Percentile (standard distribution)
+      iq_percentile: (value) => {
+        const mean = 100;
+        const sd = 15;
+        const z = (value - mean) / sd;
+        return Math.round(cumulativeNormalDistribution(z) * 100);
+      },
+      
+      // 5K Run Time Percentile (minutes, age and gender adjusted)
+      run_5k_percentile: (minutes, age, gender) => {
+        const isMale = gender === 'male';
+        const ageFactor = age < 30 ? 1.0 : age < 40 ? 0.95 : age < 50 ? 0.9 : 0.85;
+        
+        // Lower time = better, so we invert
+        const benchmarks = isMale ? 
+          [40, 30, 25, 22, 20, 18, 16] : 
+          [45, 35, 30, 27, 24, 21, 19];
+        
+        // Adjust for age
+        const adjusted = benchmarks.map(b => b / ageFactor);
+        // Invert because lower is better
+        const percentile = 100 - calculatePercentileFromBenchmarks(minutes, adjusted);
+        return Math.max(0, Math.min(100, percentile));
+      },
+      
+      // General strength percentile (bodyweight ratio)
+      strength_ratio_percentile: (weight, bodyweight) => {
+        const ratio = weight / bodyweight;
+        const benchmarks = [0, 0.3, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+        return calculatePercentileFromBenchmarks(ratio, benchmarks);
+      }
+    };
+
+    // Helper: Calculate percentile from benchmark array
+    function calculatePercentileFromBenchmarks(value, benchmarks) {
+      if (value <= benchmarks[0]) return 0;
+      if (value >= benchmarks[benchmarks.length - 1]) return 100;
+      
+      for (let i = 0; i < benchmarks.length - 1; i++) {
+        if (value >= benchmarks[i] && value <= benchmarks[i + 1]) {
+          const range = benchmarks[i + 1] - benchmarks[i];
+          const position = value - benchmarks[i];
+          const percentInRange = position / range;
+          const percentileStart = (i / (benchmarks.length - 1)) * 100;
+          const percentileEnd = ((i + 1) / (benchmarks.length - 1)) * 100;
+          return Math.round(percentileStart + (percentileEnd - percentileStart) * percentInRange);
+        }
+      }
+      return 50;
+    }
+
+    // Helper: Cumulative normal distribution (for IQ calculation)
+    function cumulativeNormalDistribution(z) {
+      const t = 1 / (1 + 0.2316419 * Math.abs(z));
+      const d = 0.3989423 * Math.exp(-z * z / 2);
+      const prob = d * t * (0.3193815 + t * (-0.3565638 + t * (1.781478 + t * (-1.821256 + t * 1.330274))));
+      return z > 0 ? 1 - prob : prob;
+    }
 
     // INITIALIZE
     async function init() {
-        document.getElementById("status").textContent = "✅ Connected to Supabase";
-        
-        // Ensure category structure is fully loaded (or initialized) before continuing
-        const categoriesLoaded = await loadCategoryStructure();
-        
-        // Only proceed to load the dashboard and weights if categories are present
-        if (categoriesLoaded) {
-            await loadWeights();
-            await loadDashboard();
-        } else {
-            document.getElementById("status").textContent = "❌ Failed to load or initialize categories. Check console.";
-        }
+      document.getElementById("status").textContent = "✅ Connected to Supabase";
+      await loadPersonalInfo();
+      const categoriesLoaded = await loadCategoryStructure();
+      
+      if (categoriesLoaded) {
+        await loadMetricDefinitions();
+        await loadWeights();
+        await loadDashboard();
+      } else {
+        document.getElementById("status").textContent = "❌ Failed to load categories";
+      }
+    }
+
+    // LOAD PERSONAL INFO
+    async function loadPersonalInfo() {
+      const { data, error } = await supabase
+        .from("user_profile")
+        .select("*")
+        .single();
+
+      if (data) {
+        userProfile = data;
+        document.getElementById("userAge").value = data.age || "";
+        document.getElementById("userGender").value = data.gender || "";
+        document.getElementById("userLocation").value = data.location || "";
+      }
+    }
+
+    // SAVE PERSONAL INFO
+    async function savePersonalInfo() {
+      const age = parseInt(document.getElementById("userAge").value);
+      const gender = document.getElementById("userGender").value;
+      const location = document.getElementById("userLocation").value;
+
+      const { error } = await supabase
+        .from("user_profile")
+        .upsert({ 
+          id: 1, 
+          age, 
+          gender, 
+          location,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error(error);
+        alert("Failed to save personal info");
+        return;
+      }
+
+      userProfile = { age, gender, location };
+      document.getElementById("status").textContent = "✅ Personal info saved!";
     }
 
     // TAB SWITCHING
@@ -415,38 +633,40 @@
       }
     }
 
-    // LOAD CATEGORY STRUCTURE FROM DATABASE
+    // LOAD CATEGORY STRUCTURE
     async function loadCategoryStructure() {
-        const { data, error } = await supabase
-            .from("category_structure")
-            .select("*")
-            .order("path", { ascending: true });
-    
-        if (error || !data || data.length === 0) {
-            console.warn("Category structure empty or error. Initializing default structure.");
-            
-            // Await the initialization, which calls loadCategoryStructure again upon success.
-            await initializeDefaultStructure(); 
-            
-            // Re-run the fetch after initialization attempt
-            const { data: newData, error: newError } = await supabase
-                .from("category_structure")
-                .select("*")
-                .order("path", { ascending: true });
-    
-            if (newError || !newData || newData.length === 0) {
-                console.error("Failed to initialize default structure.");
-                return false; // Failed to load/initialize
-            }
-            
-            categoryStructure = newData;
-            populateCategorySelectors();
-            return true; // Successfully initialized and loaded
-        }
-    
-        categoryStructure = data;
+      const { data, error } = await supabase
+        .from("category_structure")
+        .select("*")
+        .order("path", { ascending: true });
+
+      if (error || !data || data.length === 0) {
+        await initializeDefaultStructure();
+        const { data: newData } = await supabase
+          .from("category_structure")
+          .select("*")
+          .order("path", { ascending: true });
+
+        if (!newData || newData.length === 0) return false;
+        categoryStructure = newData;
         populateCategorySelectors();
-        return true; // Successfully loaded
+        return true;
+      }
+
+      categoryStructure = data;
+      populateCategorySelectors();
+      return true;
+    }
+
+    // LOAD METRIC DEFINITIONS
+    async function loadMetricDefinitions() {
+      const { data, error } = await supabase
+        .from("metric_definitions")
+        .select("*");
+
+      if (data) {
+        metricDefinitions = data;
+      }
     }
 
     // INITIALIZE DEFAULT STRUCTURE
@@ -454,49 +674,34 @@
       const defaults = [
         { path: "physical", name: "Physical", icon: "💪", parent_path: null },
         { path: "physical.strength", name: "Strength", icon: "🏋️", parent_path: "physical" },
-        { path: "physical.cardio", name: "Cardio", icon: "🏃", parent_path: "physical" },
-        { path: "physical.flexibility", name: "Flexibility", icon: "🧘", parent_path: "physical" },
-        
         { path: "cognitive", name: "Cognitive", icon: "🧠", parent_path: null },
-        { path: "cognitive.logic", name: "Logical Reasoning", icon: "🔬", parent_path: "cognitive" },
-        { path: "cognitive.verbal", name: "Verbal Ability", icon: "📖", parent_path: "cognitive" },
-        { path: "cognitive.memory", name: "Memory", icon: "🧩", parent_path: "cognitive" },
-        
         { path: "social", name: "Social", icon: "🗣️", parent_path: null },
-        { path: "social.charisma", name: "Charisma", icon: "✨", parent_path: "social" },
-        { path: "social.networking", name: "Networking", icon: "🤝", parent_path: "social" },
-        
         { path: "financial", name: "Financial", icon: "💰", parent_path: null },
-        { path: "financial.income", name: "Income", icon: "💵", parent_path: "financial" },
         { path: "financial.networth", name: "Net Worth", icon: "💎", parent_path: "financial" },
-        
-        { path: "emotional", name: "Emotional", icon: "😌", parent_path: null },
-        { path: "emotional.resilience", name: "Resilience", icon: "🛡️", parent_path: "emotional" },
-        { path: "emotional.eq", name: "Emotional Intelligence", icon: "❤️", parent_path: "emotional" }
+        { path: "emotional", name: "Emotional", icon: "😌", parent_path: null }
       ];
 
-      const { error } = await supabase.from("category_structure").insert(defaults);
-      if (!error) {
-        await loadCategoryStructure();
-      }
+      await supabase.from("category_structure").insert(defaults);
+      
+      // Add default metrics
+      const defaultMetrics = [
+        { category_path: "financial.networth", metric_name: "Net Worth", unit: "USD", percentile_function: "networth_percentile", parameters: ["value", "age"] },
+        { category_path: "physical.strength", metric_name: "Bench Press", unit: "lbs", percentile_function: "bench_press_percentile", parameters: ["weight", "age", "bodyweight"] }
+      ];
+      
+      await supabase.from("metric_definitions").insert(defaultMetrics);
     }
 
-    // GET TOP LEVEL CATEGORIES
     function getTopLevelCategories() {
       return categoryStructure.filter(c => !c.parent_path);
     }
 
-    // GET CHILDREN OF A CATEGORY
     function getChildren(path) {
       return categoryStructure.filter(c => c.parent_path === path);
     }
 
-    // BUILD CATEGORY TREE
     function buildCategoryTree(parentPath = null, level = 0) {
-      const categories = parentPath === null ? 
-        getTopLevelCategories() : 
-        getChildren(parentPath);
-      
+      const categories = parentPath === null ? getTopLevelCategories() : getChildren(parentPath);
       return categories.map(cat => ({
         ...cat,
         level,
@@ -504,24 +709,18 @@
       }));
     }
 
-    // POPULATE CATEGORY SELECTORS
     function populateCategorySelectors() {
-      // Dashboard buttons
       const buttonContainer = document.getElementById("categoryButtons");
       buttonContainer.innerHTML = "";
       
       getTopLevelCategories().forEach(cat => {
         const btn = document.createElement("button");
         btn.className = "category-btn";
-        btn.innerHTML = `
-          <span>${cat.icon} ${cat.name}</span>
-          <span>→</span>
-        `;
+        btn.innerHTML = `<span>${cat.icon} ${cat.name}</span><span>→</span>`;
         btn.onclick = () => selectCategory(cat.path);
         buttonContainer.appendChild(btn);
       });
 
-      // Input dropdown - flatten all paths
       const pathSelect = document.getElementById("categoryPathSelect");
       pathSelect.innerHTML = '<option value="">Select...</option>';
       
@@ -538,43 +737,187 @@
         });
       }
       
-      const tree = buildCategoryTree();
-      addOptions(tree);
+      addOptions(buildCategoryTree());
 
-      // Parent select in modal
       const parentSelect = document.getElementById("modalParentSelect");
       parentSelect.innerHTML = '<option value="">Top Level</option>';
+      addOptions(buildCategoryTree());
+      parentSelect.innerHTML = '<option value="">Top Level</option>' + pathSelect.innerHTML.substring(26);
+    }
+
+    // UPDATE METRIC INPUTS
+    async function updateMetricInputs() {
+      const categoryPath = document.getElementById("categoryPathSelect").value;
+      const container = document.getElementById("metricInputsContainer");
+      container.innerHTML = "";
+
+      if (!categoryPath) return;
+
+      const cat = categoryStructure.find(c => c.path === categoryPath);
+      document.getElementById("inputBreadcrumb").textContent = `${cat.icon} ${cat.name}`;
+
+      const metrics = metricDefinitions.filter(m => m.category_path === categoryPath);
+
+      if (metrics.length === 0) {
+        container.innerHTML = "<p style='color: #999;'>No metrics defined for this category. Add metrics in Manage Categories.</p>";
+        return;
+      }
+
+      metrics.forEach(metric => {
+        const div = document.createElement("div");
+        div.className = "metric-input-group";
+        div.innerHTML = `
+          <div class="metric-label">
+            <label>${metric.metric_name} (${metric.unit})</label>
+            <span class="calculated-percentile" id="percentile_${metric.id}" style="display: none;"></span>
+          </div>
+          <input type="number" step="any" id="metric_${metric.id}" 
+                 placeholder="Enter ${metric.metric_name.toLowerCase()}" 
+                 oninput="calculatePercentileForMetric(${metric.id})">
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // CALCULATE PERCENTILE FOR METRIC
+    function calculatePercentileForMetric(metricId) {
+      const metric = metricDefinitions.find(m => m.id === metricId);
+      if (!metric || !metric.percentile_function) return;
+
+      const value = parseFloat(document.getElementById(`metric_${metricId}`).value);
+      if (isNaN(value)) return;
+
+      const funcName = metric.percentile_function;
+      const func = percentileFunctions[funcName];
       
-      function addParentOptions(cats, prefix = "") {
-        cats.forEach(cat => {
-          const option = document.createElement("option");
-          option.value = cat.path;
-          option.textContent = prefix + cat.icon + " " + cat.name;
-          parentSelect.appendChild(option);
-          
-          if (cat.children && cat.children.length > 0) {
-            addParentOptions(cat.children, prefix + "  ");
+      if (!func) return;
+
+      // Build parameters array
+      const params = [value];
+      if (metric.parameters && Array.isArray(metric.parameters)) {
+        metric.parameters.forEach(param => {
+          if (param === 'age' && userProfile.age) params.push(userProfile.age);
+          if (param === 'gender' && userProfile.gender) params.push(userProfile.gender);
+          if (param === 'bodyweight') {
+            // Try to find bodyweight metric in current inputs
+            const bwMetric = metricDefinitions.find(m => 
+              m.category_path.includes('physical') && m.metric_name.toLowerCase().includes('weight')
+            );
+            if (bwMetric) {
+              const bw = parseFloat(document.getElementById(`metric_${bwMetric.id}`)?.value);
+              if (!isNaN(bw)) params.push(bw);
+            }
           }
         });
       }
-      
-      addParentOptions(tree);
+
+      try {
+        const percentile = func(...params);
+        const displayEl = document.getElementById(`percentile_${metricId}`);
+        displayEl.textContent = `${Math.round(percentile)}th percentile`;
+        displayEl.style.display = 'inline-block';
+      } catch (e) {
+        console.error("Error calculating percentile:", e);
+      }
     }
 
-    // SELECT CATEGORY FOR DETAIL VIEW
+    // ADD METRIC VALUES
+    async function addMetricValues() {
+      const categoryPath = document.getElementById("categoryPathSelect").value;
+      const comparisonGroup = document.getElementById("comparisonGroup").value;
+
+      if (!categoryPath) {
+        alert("Please select a category");
+        return;
+      }
+
+      const metrics = metricDefinitions.filter(m => m.category_path === categoryPath);
+      const entries = [];
+
+      for (const metric of metrics) {
+        const value = parseFloat(document.getElementById(`metric_${metric.id}`).value);
+        if (isNaN(value)) continue;
+
+        let percentile = null;
+
+        // Calculate percentile if function exists
+        if (metric.percentile_function && percentileFunctions[metric.percentile_function]) {
+          const func = percentileFunctions[metric.percentile_function];
+          const params = [value];
+          
+          if (metric.parameters && Array.isArray(metric.parameters)) {
+            metric.parameters.forEach(param => {
+              if (param === 'age' && userProfile.age) params.push(userProfile.age);
+              if (param === 'gender' && userProfile.gender) params.push(userProfile.gender);
+              if (param === 'bodyweight') {
+                const bwMetric = metricDefinitions.find(m => 
+                  m.category_path.includes('physical') && m.metric_name.toLowerCase().includes('weight')
+                );
+                if (bwMetric) {
+                  const bw = parseFloat(document.getElementById(`metric_${bwMetric.id}`)?.value);
+                  if (!isNaN(bw)) params.push(bw);
+                }
+              }
+            });
+          }
+
+          try {
+            percentile = Math.round(func(...params));
+          } catch (e) {
+            console.error("Percentile calculation error:", e);
+          }
+        }
+
+        entries.push({
+          category_path: categoryPath,
+          metric_id: metric.id,
+          metric_name: metric.metric_name,
+          value,
+          percentile,
+          comparison_group: comparisonGroup
+        });
+      }
+
+      if (entries.length === 0) {
+        alert("Please enter at least one metric value");
+        return;
+      }
+
+      const { error } = await supabase.from("metric_values").insert(entries);
+
+      if (error) {
+        console.error(error);
+        document.getElementById("status").textContent = "❌ Insert failed";
+        return;
+      }
+
+      document.getElementById("status").textContent = "✅ Values added!";
+      
+      // Clear inputs
+      metrics.forEach(m => {
+        const input = document.getElementById(`metric_${m.id}`);
+        if (input) input.value = "";
+        const percentileEl = document.getElementById(`percentile_${m.id}`);
+        if (percentileEl) percentileEl.style.display = 'none';
+      });
+      
+      await loadDashboard();
+      if (selectedCategory) {
+        await loadDetailStats(selectedCategory);
+      }
+    }
+
+    // SELECT CATEGORY
     async function selectCategory(path) {
       selectedCategory = path;
       
-      // Update button states
       document.querySelectorAll('.category-btn').forEach(btn => {
         btn.classList.remove('selected');
       });
       event.target.closest('.category-btn').classList.add('selected');
       
-      // Show detail panel
       document.getElementById("detailPanel").style.display = "block";
       
-      // Build breadcrumb
       const breadcrumb = document.getElementById("breadcrumb");
       const pathParts = path.split('.');
       let breadcrumbHTML = "Home";
@@ -589,23 +932,19 @@
       });
       breadcrumb.textContent = breadcrumbHTML;
       
-      // Get category info
       const category = categoryStructure.find(c => c.path === path);
       document.getElementById("detailTitle").textContent = `${category.icon} ${category.name}`;
       
-      // Load stats for this category and children
       await loadDetailStats(path);
     }
 
     // LOAD DETAIL STATS
     async function loadDetailStats(path) {
-      // Get all descendants
       const descendants = getDescendants(path);
       const allPaths = [path, ...descendants.map(d => d.path)];
       
-      // Fetch latest data for all paths
       const { data, error } = await supabase
-        .from("stat_entries")
+        .from("metric_values")
         .select("*")
         .in("category_path", allPaths)
         .order("created_at", { ascending: false });
@@ -615,59 +954,60 @@
         return;
       }
 
-      // Get latest for each path
       const statsGrid = document.getElementById("detailStats");
       statsGrid.innerHTML = "";
       
-      // Group by category_path
       const grouped = {};
       data.forEach(entry => {
         if (!grouped[entry.category_path]) {
-          grouped[entry.category_path] = [];
+          grouped[entry.category_path] = {};
         }
-        grouped[entry.category_path].push(entry);
+        if (!grouped[entry.category_path][entry.metric_name]) {
+          grouped[entry.category_path][entry.metric_name] = [];
+        }
+        grouped[entry.category_path][entry.metric_name].push(entry);
       });
 
-      // Display immediate children
       const children = getChildren(path);
       children.forEach(child => {
         const childData = grouped[child.path];
-        if (childData && childData.length > 0) {
-          const latest = childData[0];
-          const statItem = document.createElement("div");
-          statItem.className = "stat-item";
-          statItem.style.cursor = "pointer";
-          statItem.onclick = () => selectCategory(child.path);
-          statItem.innerHTML = `
-            <h4>${child.icon} ${child.name}</h4>
-            <div class="stat-value">${latest.value || "—"}</div>
-            <div class="stat-percentile">${latest.percentile}th percentile</div>
-          `;
-          statsGrid.appendChild(statItem);
+        if (childData) {
+          Object.keys(childData).forEach(metricName => {
+            const latest = childData[metricName][0];
+            const statItem = document.createElement("div");
+            statItem.className = "stat-item";
+            statItem.style.cursor = "pointer";
+            statItem.onclick = () => selectCategory(child.path);
+            statItem.innerHTML = `
+              <h4>${child.icon} ${child.name} - ${metricName}</h4>
+              <div class="stat-value">${latest.value}</div>
+              <div class="stat-percentile">${latest.percentile ? latest.percentile + 'th percentile' : 'No percentile'}</div>
+            `;
+            statsGrid.appendChild(statItem);
+          });
         }
       });
 
-      // If leaf node (no children), show own latest value
       if (children.length === 0 && grouped[path]) {
-        const latest = grouped[path][0];
-        const statItem = document.createElement("div");
-        statItem.className = "stat-item";
-        statItem.innerHTML = `
-          <h4>Latest Entry</h4>
-          <div class="stat-value">${latest.value || "—"}</div>
-          <div class="stat-percentile">${latest.percentile}th percentile</div>
-          <div style="font-size: 0.8em; color: #666; margin-top: 10px;">
-            ${new Date(latest.created_at).toLocaleDateString()}
-          </div>
-        `;
-        statsGrid.appendChild(statItem);
+        Object.keys(grouped[path]).forEach(metricName => {
+          const latest = grouped[path][metricName][0];
+          const statItem = document.createElement("div");
+          statItem.className = "stat-item";
+          statItem.innerHTML = `
+            <h4>${metricName}</h4>
+            <div class="stat-value">${latest.value}</div>
+            <div class="stat-percentile">${latest.percentile ? latest.percentile + 'th percentile' : 'No percentile'}</div>
+            <div style="font-size: 0.8em; color: #999; margin-top: 10px;">
+              ${new Date(latest.created_at).toLocaleDateString()}
+            </div>
+          `;
+          statsGrid.appendChild(statItem);
+        });
       }
 
-      // Load history chart
       await loadDetailChart(path);
     }
 
-    // GET ALL DESCENDANTS
     function getDescendants(path) {
       const direct = getChildren(path);
       let all = [...direct];
@@ -680,12 +1020,10 @@
     // LOAD DETAIL CHART
     async function loadDetailChart(path) {
       const children = getChildren(path);
-      const allPaths = children.length > 0 ? 
-        children.map(c => c.path) : 
-        [path];
+      const allPaths = children.length > 0 ? children.map(c => c.path) : [path];
 
       const { data, error } = await supabase
-        .from("stat_entries")
+        .from("metric_values")
         .select("*")
         .in("category_path", allPaths)
         .order("created_at", { ascending: true });
@@ -695,13 +1033,14 @@
       const ctx = document.getElementById("detailChart");
       if (detailChart) detailChart.destroy();
 
-      // Group by category_path
       const datasets = {};
-      allPaths.forEach(p => {
-        const cat = categoryStructure.find(c => c.path === p);
-        if (cat) {
-          datasets[p] = {
-            label: cat.icon + " " + cat.name,
+      
+      data.forEach(entry => {
+        const key = `${entry.category_path}_${entry.metric_name}`;
+        if (!datasets[key]) {
+          const cat = categoryStructure.find(c => c.path === entry.category_path);
+          datasets[key] = {
+            label: (cat ? cat.icon + " " + cat.name + " - " : "") + entry.metric_name,
             data: [],
             tension: 0.3,
             borderWidth: 2
@@ -714,8 +1053,9 @@
         const date = new Date(entry.created_at).toLocaleDateString();
         if (!labels.includes(date)) labels.push(date);
         
-        if (datasets[entry.category_path]) {
-          datasets[entry.category_path].data.push({
+        const key = `${entry.category_path}_${entry.metric_name}`;
+        if (datasets[key] && entry.percentile !== null) {
+          datasets[key].data.push({
             x: date,
             y: entry.percentile
           });
@@ -733,14 +1073,24 @@
           plugins: {
             title: { 
               display: true, 
-              text: "Historical Progress (Percentiles)" 
+              text: "Historical Progress (Percentiles)",
+              color: '#e0e0e0'
+            },
+            legend: {
+              labels: { color: '#e0e0e0' }
             }
           },
           scales: {
             y: { 
               min: 0, 
               max: 100, 
-              title: { display: true, text: "Percentile" } 
+              title: { display: true, text: "Percentile", color: '#e0e0e0' },
+              ticks: { color: '#e0e0e0' },
+              grid: { color: '#3a3a4e' }
+            },
+            x: {
+              ticks: { color: '#e0e0e0' },
+              grid: { color: '#3a3a4e' }
             }
           }
         }
@@ -750,8 +1100,6 @@
     // LOAD SPIDER CHART
     async function loadDashboard() {
       const topLevel = getTopLevelCategories();
-      
-      // Get latest percentile for each top-level category
       const categoryAverages = {};
       
       for (const cat of topLevel) {
@@ -759,9 +1107,10 @@
         const allPaths = [cat.path, ...descendants.map(d => d.path)];
         
         const { data, error } = await supabase
-          .from("stat_entries")
+          .from("metric_values")
           .select("percentile")
           .in("category_path", allPaths)
+          .not("percentile", "is", null)
           .order("created_at", { ascending: false })
           .limit(10);
 
@@ -773,7 +1122,6 @@
         }
       }
 
-      // Create spider chart
       const ctx = document.getElementById("spiderChart");
       if (spiderChart) spiderChart.destroy();
 
@@ -784,26 +1132,38 @@
           datasets: [{
             label: "Current Percentiles",
             data: topLevel.map(c => categoryAverages[c.path] || 0),
-            backgroundColor: "rgba(102, 126, 234, 0.2)",
+            backgroundColor: "rgba(102, 126, 234, 0.3)",
             borderColor: "#667eea",
             borderWidth: 2,
-            pointBackgroundColor: "#667eea"
+            pointBackgroundColor: "#667eea",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2
           }]
         },
         options: {
           responsive: true,
           maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              labels: { color: '#e0e0e0' }
+            }
+          },
           scales: {
             r: {
               min: 0,
               max: 100,
-              ticks: { stepSize: 20 }
+              ticks: { 
+                stepSize: 20,
+                color: '#e0e0e0',
+                backdropColor: 'transparent'
+              },
+              grid: { color: '#3a3a4e' },
+              pointLabels: { color: '#e0e0e0' }
             }
           }
         }
       });
 
-      // Calculate overall score
       let totalWeighted = 0;
       let totalWeight = 0;
 
@@ -817,60 +1177,16 @@
       document.getElementById("overallScore").textContent = overallScore;
     }
 
-    // ADD STAT ENTRY
-    async function addStatEntry() {
-      const categoryPath = document.getElementById("categoryPathSelect").value;
-      const value = document.getElementById("valueInput").value;
-      const percentile = document.getElementById("percentileInput").value;
-      const comparisonGroup = document.getElementById("comparisonGroup").value;
-      const notes = document.getElementById("notesInput").value;
-
-      if (!categoryPath || !percentile) {
-        alert("Please select a category and enter percentile");
-        return;
-      }
-
-      const { error } = await supabase.from("stat_entries").insert([{
-        category_path: categoryPath,
-        value: parseFloat(value) || null,
-        percentile: parseFloat(percentile),
-        comparison_group: comparisonGroup,
-        notes
-      }]);
-
-      if (error) {
-        console.error(error);
-        document.getElementById("status").textContent = "❌ Insert failed";
-        return;
-      }
-
-      document.getElementById("status").textContent = "✅ Entry added!";
-      document.getElementById("valueInput").value = "";
-      document.getElementById("percentileInput").value = "";
-      document.getElementById("notesInput").value = "";
-      
-      await loadDashboard();
-      if (selectedCategory) {
-        await loadDetailStats(selectedCategory);
-      }
-    }
-
-    // UPDATE INPUT PATH
-    function updateInputPath() {
-      const path = document.getElementById("categoryPathSelect").value;
-      if (path) {
-        const cat = categoryStructure.find(c => c.path === path);
-        document.getElementById("inputBreadcrumb").textContent = 
-          `${cat.icon} ${cat.name}`;
-      }
-    }
-
     // MODAL FUNCTIONS
+    let metricFieldCounter = 0;
+
     function openAddCategoryModal() {
       document.getElementById("modalTitle").textContent = "Add Top-Level Category";
       document.getElementById("modalParentSelect").value = "";
       document.getElementById("modalCategoryName").value = "";
       document.getElementById("modalCategoryIcon").value = "";
+      document.getElementById("metricsContainer").innerHTML = "";
+      metricFieldCounter = 0;
       document.getElementById("categoryModal").classList.add("active");
     }
 
@@ -878,11 +1194,54 @@
       document.getElementById("modalTitle").textContent = "Add Sub-Category";
       document.getElementById("modalCategoryName").value = "";
       document.getElementById("modalCategoryIcon").value = "";
+      document.getElementById("metricsContainer").innerHTML = "";
+      metricFieldCounter = 0;
       document.getElementById("categoryModal").classList.add("active");
     }
 
     function closeModal() {
       document.getElementById("categoryModal").classList.remove("active");
+    }
+
+    function addMetricField() {
+      const container = document.getElementById("metricsContainer");
+      const id = metricFieldCounter++;
+      
+      const div = document.createElement("div");
+      div.className = "metric-input-group";
+      div.id = `metricField_${id}`;
+      div.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <strong>Metric ${id + 1}</strong>
+          <button onclick="removeMetricField(${id})" class="danger" style="padding: 5px 10px;">Remove</button>
+        </div>
+        <div class="form-group">
+          <label>Metric Name</label>
+          <input type="text" id="metricName_${id}" placeholder="e.g., Net Worth">
+        </div>
+        <div class="form-group">
+          <label>Unit</label>
+          <input type="text" id="metricUnit_${id}" placeholder="e.g., USD, lbs, minutes">
+        </div>
+        <div class="form-group">
+          <label>Percentile Function (optional)</label>
+          <select id="metricFunc_${id}">
+            <option value="">None (manual entry)</option>
+            <option value="networth_percentile">Net Worth (age-adjusted)</option>
+            <option value="income_percentile">Income</option>
+            <option value="bench_press_percentile">Bench Press (weight/bodyweight)</option>
+            <option value="iq_percentile">IQ</option>
+            <option value="run_5k_percentile">5K Run Time</option>
+            <option value="strength_ratio_percentile">Strength Ratio</option>
+          </select>
+        </div>
+      `;
+      container.appendChild(div);
+    }
+
+    function removeMetricField(id) {
+      const field = document.getElementById(`metricField_${id}`);
+      if (field) field.remove();
     }
 
     async function saveCategory() {
@@ -895,27 +1254,67 @@
         return;
       }
 
-      // Generate path
       const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
       const path = parentPath ? `${parentPath}.${safeName}` : safeName;
 
-      const { error } = await supabase.from("category_structure").insert([{
+      const { error: catError } = await supabase.from("category_structure").insert([{
         path,
         name,
         icon: icon || "📊",
         parent_path: parentPath || null
       }]);
 
-      if (error) {
-        console.error(error);
+      if (catError) {
+        console.error(catError);
         alert("Failed to add category");
         return;
       }
 
+      // Save metrics
+      const metrics = [];
+      for (let i = 0; i < metricFieldCounter; i++) {
+        const nameField = document.getElementById(`metricName_${i}`);
+        if (!nameField) continue;
+        
+        const metricName = nameField.value;
+        const unit = document.getElementById(`metricUnit_${i}`).value;
+        const func = document.getElementById(`metricFunc_${i}`).value;
+
+        if (metricName && unit) {
+          metrics.push({
+            category_path: path,
+            metric_name: metricName,
+            unit,
+            percentile_function: func || null,
+            parameters: func ? getParametersForFunction(func) : null
+          });
+        }
+      }
+
+      if (metrics.length > 0) {
+        const { error: metricError } = await supabase.from("metric_definitions").insert(metrics);
+        if (metricError) {
+          console.error(metricError);
+        }
+      }
+
       closeModal();
       await loadCategoryStructure();
+      await loadMetricDefinitions();
       renderCategoryHierarchy();
       document.getElementById("status").textContent = "✅ Category added!";
+    }
+
+    function getParametersForFunction(funcName) {
+      const paramMap = {
+        networth_percentile: ["value", "age"],
+        income_percentile: ["value"],
+        bench_press_percentile: ["weight", "age", "bodyweight"],
+        iq_percentile: ["value"],
+        run_5k_percentile: ["minutes", "age", "gender"],
+        strength_ratio_percentile: ["weight", "bodyweight"]
+      };
+      return paramMap[funcName] || ["value"];
     }
 
     // RENDER CATEGORY HIERARCHY
@@ -927,8 +1326,13 @@
         cats.forEach(cat => {
           const item = document.createElement("div");
           item.className = "hierarchy-item";
+          
+          const metrics = metricDefinitions.filter(m => m.category_path === cat.path);
+          const metricsText = metrics.length > 0 ? 
+            ` (${metrics.length} metric${metrics.length > 1 ? 's' : ''})` : '';
+          
           item.innerHTML = `
-            <span>${cat.icon} ${cat.name}</span>
+            <span>${cat.icon} ${cat.name}${metricsText}</span>
             <div>
               <button onclick="deleteCategory('${cat.path}')" class="danger" style="padding: 5px 10px; font-size: 14px;">Delete</button>
             </div>
@@ -950,24 +1354,16 @@
 
     // DELETE CATEGORY
     async function deleteCategory(path) {
-      if (!confirm(`Delete "${path}" and all its sub-categories?`)) return;
+      if (!confirm(`Delete "${path}" and all its sub-categories and metrics?`)) return;
 
-      // Delete all descendants
       const descendants = getDescendants(path);
       const allPaths = [path, ...descendants.map(d => d.path)];
 
-      const { error } = await supabase
-        .from("category_structure")
-        .delete()
-        .in("path", allPaths);
-
-      if (error) {
-        console.error(error);
-        alert("Failed to delete category");
-        return;
-      }
+      await supabase.from("category_structure").delete().in("path", allPaths);
+      await supabase.from("metric_definitions").delete().in("category_path", allPaths);
 
       await loadCategoryStructure();
+      await loadMetricDefinitions();
       renderCategoryHierarchy();
       document.getElementById("status").textContent = "✅ Category deleted!";
     }
@@ -1021,7 +1417,6 @@
       await loadDashboard();
     }
 
-    // START
     init();
   </script>
 </body>
