@@ -4,7 +4,7 @@
 // Import all category percentile modules (these will be loaded via script tags in HTML)
 // The functions will be available globally via the percentileFunctions object
 
-const percentileFunctions = {};
+var percentileFunctions = {};
 
 // Helper: Calculate percentile from benchmark array
 function calculatePercentileFromBenchmarks(value, benchmarks) {
