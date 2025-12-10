@@ -731,6 +731,7 @@
     }
 
     function populateCategorySelectors() {
+      // Populate dashboard category buttons (top-level only)
       const buttonContainer = document.getElementById("categoryButtons");
       buttonContainer.innerHTML = "";
       
@@ -741,6 +742,49 @@
         btn.onclick = () => selectCategory(cat.path);
         buttonContainer.appendChild(btn);
       });
+    
+      // Populate INPUT tab select (only categories with metrics)
+      const pathSelect = document.getElementById("categoryPathSelect");
+      pathSelect.innerHTML = '<option value="">Select...</option>';
+      
+      function addInputOptions(cats, prefix = "") {
+        cats.forEach(cat => {
+          const hasMetrics = metricDefinitions.some(m => m.category_path === cat.path);
+          
+          if (hasMetrics) {
+            const option = document.createElement("option");
+            option.value = cat.path;
+            option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
+            pathSelect.appendChild(option);
+          }
+          
+          if (cat.children && cat.children.length > 0) {
+            addInputOptions(cat.children, prefix + "  ");
+          }
+        });
+      }
+      
+      addInputOptions(buildCategoryTree());
+    
+      // Populate MODAL parent select (ALL categories)
+      const parentSelect = document.getElementById("modalParentSelect");
+      parentSelect.innerHTML = '<option value="">Top Level</option>';
+      
+      function addAllCategoryOptions(cats, prefix = "") {
+        cats.forEach(cat => {
+          const option = document.createElement("option");
+          option.value = cat.path;
+          option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
+          parentSelect.appendChild(option);
+          
+          if (cat.children && cat.children.length > 0) {
+            addAllCategoryOptions(cat.children, prefix + "  ");
+          }
+        });
+      }
+      
+      addAllCategoryOptions(buildCategoryTree());
+    }
 
       const pathSelect = document.getElementById("categoryPathSelect");
       pathSelect.innerHTML = '<option value="">Select...</option>';
