@@ -8,7 +8,7 @@ const percentileFunctionsConfig = {
     { value: 'deadlift_percentile', label: 'Deadlift (weight/bodyweight)', category: 'physical' },
     { value: 'iq_percentile', label: 'IQ', category: 'cognitive' },
     { value: 'run_5k_percentile', label: '5K Run Time', category: 'physical' },
-    { value: 'strength_ratio_percentile', label: 'Strength Ratio', category: 'physical' }
+    { value: 'strength_ratio_percentile', label: 'Strength Ratio', category: 'physical' },
     { value: 'emotional_intelligence_percentile', label: 'Emotional Intelligence Score', category: 'emotional' }
   ],
   
