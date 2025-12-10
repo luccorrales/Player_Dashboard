@@ -786,35 +786,6 @@
       addAllCategoryOptions(buildCategoryTree());
     }
 
-      const pathSelect = document.getElementById("categoryPathSelect");
-      pathSelect.innerHTML = '<option value="">Select...</option>';
-      
-      function addOptions(cats, prefix = "") {
-        cats.forEach(cat => {
-          // Only add categories that have metrics defined
-          const hasMetrics = metricDefinitions.some(m => m.category_path === cat.path);
-          
-          if (hasMetrics) {
-            const option = document.createElement("option");
-            option.value = cat.path;
-            option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
-            pathSelect.appendChild(option);
-          }
-          
-          if (cat.children && cat.children.length > 0) {
-            addOptions(cat.children, prefix + "  ");
-          }
-        });
-      }
-      
-      addOptions(buildCategoryTree());
-
-      const parentSelect = document.getElementById("modalParentSelect");
-      parentSelect.innerHTML = '<option value="">Top Level</option>';
-      addOptions(buildCategoryTree());
-      parentSelect.innerHTML = '<option value="">Top Level</option>' + pathSelect.innerHTML.substring(26);
-    }
-
     // UPDATE METRIC INPUTS
     async function updateMetricInputs() {
       const categoryPath = document.getElementById("categoryPathSelect").value;
