@@ -9,6 +9,7 @@ const percentileFunctionsConfig = {
     { value: 'iq_percentile', label: 'IQ', category: 'cognitive' },
     { value: 'run_5k_percentile', label: '5K Run Time', category: 'physical' },
     { value: 'strength_ratio_percentile', label: 'Strength Ratio', category: 'physical' }
+    { value: 'emotional_intelligence_percentile', label: 'Emotional Intelligence Score', category: 'emotional' }
   ],
   
   parameters: {
@@ -17,6 +18,7 @@ const percentileFunctionsConfig = {
     bench_press_percentile: ["weight", "age", "bodyweight"],
     iq_percentile: ["value"],
     run_5k_percentile: ["minutes", "age", "gender"],
-    strength_ratio_percentile: ["weight", "bodyweight"]
+    strength_ratio_percentile: ["weight", "bodyweight"],
+    emotional_intelligence_percentile: ["eqScore"]
   }
 };
