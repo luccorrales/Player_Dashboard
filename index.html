@@ -1,3 +1,13 @@
+<script src="js/percentile/index.js"></script>
+<script src="js/percentile/percentile-physical.js"></script>
+<script src="js/percentile/percentile-cognitive.js"></script>
+<script src="js/percentile/percentile-financial.js"></script>
+<script src="js/percentile/percentile-social.js"></script>
+<script src="js/percentile/percentile-emotional.js"></script>
+<script src="js/config/percentile-functions-config.js"></script>
+<script>
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1478,18 +1488,7 @@
     }
 
     function getPercentileFunctionOptions(selectedFunc = null) {
-      const functions = [
-        { value: 'networth_percentile', label: 'Net Worth (age-adjusted)', category: 'financial' },
-        { value: 'income_percentile', label: 'Income', category: 'financial' },
-        { value: 'bench_press_percentile', label: 'Bench Press (weight/bodyweight)', category: 'physical' },
-        { value: 'squat_percentile', label: 'Squat (weight/bodyweight)', category: 'physical' },
-        { value: 'deadlift_percentile', label: 'Deadlift (weight/bodyweight)', category: 'physical' },
-        { value: 'iq_percentile', label: 'IQ', category: 'cognitive' },
-        { value: 'run_5k_percentile', label: '5K Run Time', category: 'physical' },
-        { value: 'strength_ratio_percentile', label: 'Strength Ratio', category: 'physical' }
-      ];
-
-      return functions.map(f => 
+      return percentileFunctionsConfig.functions.map(f => 
         `<option value="${f.value}" ${f.value === selectedFunc ? 'selected' : ''}>${f.label}</option>`
       ).join('');
     }
@@ -1606,15 +1605,7 @@
     }
 
     function getParametersForFunction(funcName) {
-      const paramMap = {
-        networth_percentile: ["value", "age"],
-        income_percentile: ["value"],
-        bench_press_percentile: ["weight", "age", "bodyweight"],
-        iq_percentile: ["value"],
-        run_5k_percentile: ["minutes", "age", "gender"],
-        strength_ratio_percentile: ["weight", "bodyweight"]
-      };
-      return paramMap[funcName] || ["value"];
+      return percentileFunctionsConfig.parameters[funcName] || ["value"];
     }
 
     // RENDER CATEGORY HIERARCHY
