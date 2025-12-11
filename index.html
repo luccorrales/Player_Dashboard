@@ -1239,9 +1239,9 @@
 
     // Get aggregation level (one level below selected scale)
     function getAggregationLevel(scale) {
-      const levels = ['daily', 'weekly', 'monthly', 'yearly'];
+      const levels = ['hourly', 'daily', 'weekly', 'monthly', 'yearly'];
       const currentIndex = levels.indexOf(scale);
-      return currentIndex > 0 ? levels[currentIndex - 1] : 'daily';
+      return currentIndex > 0 ? levels[currentIndex - 1] : 'hourly';
     }
 
     // Aggregate data by time period
@@ -1253,6 +1253,10 @@
         let periodKey;
         
         switch (aggregationScale) {
+          case 'hourly':
+            const hour = String(date.getHours()).padStart(2, '0');
+            periodKey = `${date.toISOString().split('T')[0]} ${hour}:00`;
+            break;
           case 'daily':
             periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
             break;
@@ -1308,6 +1312,8 @@
       const date = new Date(dateStr);
       
       switch (aggregationScale) {
+        case 'hourly':
+          return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
         case 'daily':
           return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         case 'weekly':
@@ -1921,10 +1927,10 @@
           <div class="data-entry-date">${new Date(entry.created_at).toLocaleString()}</div>
           <div class="data-entry-actions">
             ${isEditing ? 
-              `<button onclick="saveDataEntry(${entry.id})" style="padding: 5px 15px;">Save</button>
-               <button onclick="cancelEditDataEntry(${entry.id})" class="secondary" style="padding: 5px 15px;">Cancel</button>` :
-              `<button onclick="editDataEntry(${entry.id})" class="secondary" style="padding: 5px 15px;">Edit</button>
-               <button onclick="deleteDataEntry(${entry.id})" class="danger" style="padding: 5px 15px;">Delete</button>`
+              `<button onclick="saveDataEntry('${entry.id}')" style="padding: 5px 15px;">Save</button>
+               <button onclick="cancelEditDataEntry('${entry.id}')" class="secondary" style="padding: 5px 15px;">Cancel</button>` :
+              `<button onclick="editDataEntry('${entry.id}')" class="secondary" style="padding: 5px 15px;">Edit</button>
+               <button onclick="deleteDataEntry('${entry.id}')" class="danger" style="padding: 5px 15px;">Delete</button>`
             }
           </div>
         </div>
