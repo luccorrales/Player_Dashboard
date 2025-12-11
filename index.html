@@ -1079,6 +1079,8 @@
       const children = getChildren(path);
       children.forEach(child => {
         const childData = grouped[child.path];
+        
+        // Check if child has direct data
         if (childData) {
           Object.keys(childData).forEach(metricName => {
             const latest = childData[metricName][0];
@@ -1093,6 +1095,53 @@
             `;
             statsGrid.appendChild(statItem);
           });
+        } else {
+          // Child has no direct data - check if it has children with data
+          const grandchildren = getChildren(child.path);
+          const grandchildrenPaths = grandchildren.map(gc => gc.path);
+          
+          // Collect all data from grandchildren
+          const grandchildrenData = [];
+          grandchildrenPaths.forEach(gcPath => {
+            if (grouped[gcPath]) {
+              Object.values(grouped[gcPath]).forEach(metricArray => {
+                grandchildrenData.push(...metricArray);
+              });
+            }
+          });
+          
+          // If grandchildren have data, show aggregated stat for parent
+          if (grandchildrenData.length > 0) {
+            // Calculate average percentile from latest entries of each grandchild metric
+            const latestByMetric = {};
+            grandchildrenData.forEach(entry => {
+              const key = `${entry.category_path}_${entry.metric_name}`;
+              if (!latestByMetric[key] || new Date(entry.created_at) > new Date(latestByMetric[key].created_at)) {
+                latestByMetric[key] = entry;
+              }
+            });
+            
+            const percentiles = Object.values(latestByMetric)
+              .map(e => e.percentile)
+              .filter(p => p !== null && p !== undefined);
+            
+            if (percentiles.length > 0) {
+              const avgPercentile = Math.round(percentiles.reduce((a, b) => a + b, 0) / percentiles.length);
+              const statItem = document.createElement("div");
+              statItem.className = "stat-item";
+              statItem.style.cursor = "pointer";
+              statItem.onclick = () => selectCategory(child.path);
+              statItem.innerHTML = `
+                <h4>${child.icon} ${child.name}</h4>
+                <div class="stat-value">Aggregated</div>
+                <div class="stat-percentile">${avgPercentile}th percentile (avg of ${percentiles.length} metrics)</div>
+                <div style="font-size: 0.8em; color: #999; margin-top: 5px;">
+                  ${grandchildren.length} subcategories
+                </div>
+              `;
+              statsGrid.appendChild(statItem);
+            }
+          }
         }
       });
 
@@ -1125,10 +1174,51 @@
       return all;
     }
 
+    // Calculate aggregated percentile for a category from its descendants
+    async function getAggregatedPercentile(path) {
+      const descendants = getDescendants(path);
+      const allPaths = [path, ...descendants.map(d => d.path)];
+      
+      const { data, error } = await supabase
+        .from("metric_values")
+        .select("percentile, metric_name, category_path, created_at")
+        .in("category_path", allPaths)
+        .not("percentile", "is", null)
+        .order("created_at", { ascending: false });
+      
+      if (!data || data.length === 0) return null;
+      
+      // Get latest entry per unique metric
+      const latestByMetric = {};
+      data.forEach(entry => {
+        const key = `${entry.category_path}_${entry.metric_name}`;
+        if (!latestByMetric[key] || new Date(entry.created_at) > new Date(latestByMetric[key].created_at)) {
+          latestByMetric[key] = entry;
+        }
+      });
+      
+      const percentiles = Object.values(latestByMetric).map(e => e.percentile);
+      return percentiles.length > 0 ? 
+        Math.round(percentiles.reduce((a, b) => a + b, 0) / percentiles.length) : 
+        null;
+    }
+    
     // LOAD DETAIL CHART
     async function loadDetailChart(path) {
       const children = getChildren(path);
-      const allPaths = children.length > 0 ? children.map(c => c.path) : [path];
+      
+      // Collect all descendant paths for chart (include all levels below)
+      function getAllDescendantPaths(parentPath) {
+        const directChildren = getChildren(parentPath);
+        let paths = directChildren.map(c => c.path);
+        directChildren.forEach(child => {
+          paths = paths.concat(getAllDescendantPaths(child.path));
+        });
+        return paths;
+      }
+      
+      const descendantPaths = getAllDescendantPaths(path);
+      const allPaths = descendantPaths.length > 0 ? descendantPaths : [path];
 
       // Calculate date range based on settings
       const endDate = new Date();
