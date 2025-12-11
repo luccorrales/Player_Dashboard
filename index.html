@@ -1016,10 +1016,13 @@
     async function selectCategory(path) {
       selectedCategory = path;
       
-      document.querySelectorAll('.category-btn').forEach(btn => {
-        btn.classList.remove('selected');
-      });
-      event.target.closest('.category-btn').classList.add('selected');
+      // Only update button states if we clicked a category button (not a stat item)
+      if (event && event.target.closest('.category-btn')) {
+        document.querySelectorAll('.category-btn').forEach(btn => {
+          btn.classList.remove('selected');
+        });
+        event.target.closest('.category-btn').classList.add('selected');
+      }
       
       document.getElementById("detailPanel").style.display = "block";
       
