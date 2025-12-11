@@ -354,6 +354,31 @@
       margin-bottom: 15px;
       color: #667eea;
     }
+
+    /* Data Management Styles */
+    .data-tree { margin-top: 20px; }
+    .tree-category { background: #1a1a2e; border: 1px solid #3a3a4e; border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+    .tree-category-header { padding: 15px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.3s; }
+    .tree-category-header:hover { background: #252538; }
+    .tree-category-header.expanded { background: #252538; border-bottom: 1px solid #3a3a4e; }
+    .tree-category-title { display: flex; align-items: center; gap: 10px; font-weight: bold; }
+    .tree-category-arrow { transition: transform 0.3s; font-size: 1.2em; }
+    .tree-category-arrow.expanded { transform: rotate(90deg); }
+    .tree-category-content { display: none; padding: 15px; padding-left: 30px; }
+    .tree-category-content.expanded { display: block; }
+    .data-entry { background: #2a2a3e; padding: 15px; border-radius: 8px; margin-bottom: 10px; border: 1px solid #3a3a4e; }
+    .data-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .data-entry-date { color: #999; font-size: 0.9em; }
+    .data-entry-actions { display: flex; gap: 5px; }
+    .data-entry-field { margin-bottom: 10px; }
+    .data-entry-field label { font-size: 0.85em; color: #999; margin-bottom: 3px; }
+    .data-entry-field input, .data-entry-field textarea { font-size: 0.95em; padding: 8px; }
+    .data-entry.editing { border-color: #667eea; box-shadow: 0 0 10px rgba(102, 126, 234, 0.3); }
+    .no-data-message { text-align: center; padding: 20px; color: #999; font-style: italic; }
+    .search-filter { background: #1a1a2e; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #3a3a4e; }
+    .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
+    .filter-group { flex: 1; min-width: 200px; }
+    
   </style>
 </head>
 <body>
@@ -365,6 +390,7 @@
     <div class="tabs">
       <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
       <button class="tab" onclick="switchTab('input')">➕ Add Data</button>
+      <button class="tab" onclick="switchTab('datahistory')">📝 Manage Data</button>
       <button class="tab" onclick="switchTab('manage')">🗂️ Manage Categories</button>
       <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
@@ -460,6 +486,37 @@
       </div>
     </div>
 
+    <!-- DATA HISTORY TAB -->
+    <div id="datahistory" class="content">
+      <div class="input-section">
+        <h2>Data History & Management</h2>
+        
+        <div class="search-filter">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label>Filter by Category</label>
+              <select id="filterCategory" onchange="loadDataHistory()">
+                <option value="">All Categories</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Start Date</label>
+              <input type="date" id="filterStartDate" onchange="loadDataHistory()">
+            </div>
+            <div class="filter-group">
+              <label>End Date</label>
+              <input type="date" id="filterEndDate" onchange="loadDataHistory()">
+            </div>
+            <div class="filter-group" style="display: flex; align-items: flex-end;">
+              <button onclick="clearFilters()">Clear Filters</button>
+            </div>
+          </div>
+        </div>
+    
+        <div id="dataHistoryTree" class="data-tree"></div>
+      </div>
+    </div>
+    
     <!-- MANAGE CATEGORIES TAB -->
     <div id="manage" class="content">
       <div class="input-section">
@@ -517,6 +574,7 @@
     <div class="modal-content">
       <h2 id="modalTitle">Add Category</h2>
       <input type="hidden" id="modalEditPath">
+      <input type="hidden" id="modalOriginalPath">
       <div class="form-group">
         <label>Parent Category (optional)</label>
         <select id="modalParentSelect">
@@ -569,6 +627,9 @@
       customAggregation: 'daily'
     };
 
+    let expandedCategories = new Set();
+    let editingEntries = new Set();
+
     // percentileFunctions is now loaded from js/percentile/index.js
 
     // INITIALIZE
@@ -588,6 +649,7 @@
         
         // 4. Now that metrics are defined, populate selectors and continue initialization
         populateCategorySelectors(); // <--- Manual call after metrics are loaded
+        populateDataHistoryFilters();
     
         await loadWeights();
         await loadDashboard();
@@ -641,7 +703,6 @@
       document.getElementById("status").textContent = "✅ Personal info saved!";
     }
 
-    // TAB SWITCHING
     function switchTab(tabName) {
       document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -650,6 +711,8 @@
       
       if (tabName === 'manage') {
         renderCategoryHierarchy();
+      } else if (tabName === 'datahistory') {
+        loadDataHistory();
       }
     }
 
@@ -1423,6 +1486,7 @@
 
       document.getElementById("modalTitle").textContent = "Edit Category";
       document.getElementById("modalEditPath").value = path;
+      document.getElementById("modalOriginalPath").value = path;
       document.getElementById("modalParentSelect").value = category.parent_path || "";
       document.getElementById("modalCategoryName").value = category.name;
       document.getElementById("modalCategoryIcon").value = category.icon || "";
@@ -1522,21 +1586,57 @@
           return;
         }
       } else {
-        // Editing existing category
-        const { error: catError } = await supabase
-          .from("category_structure")
-          .update({
-            name,
-            icon: icon || ""
-          })
-          .eq("path", path);
-
-        if (catError) {
-          console.error(catError);
-          alert("Failed to update category");
-          return;
+        // Editing existing category - FIXED VERSION
+        const originalPath = document.getElementById("modalOriginalPath").value || editPath;
+        const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        const newPath = parentPath ? `${parentPath}.${safeName}` : safeName;
+        
+        // If path changed (parent or name changed)
+        if (newPath !== originalPath) {
+          const descendants = getDescendants(originalPath);
+          
+          // Update the category itself
+          const { error: updateError } = await supabase.from("category_structure").update({ 
+            path: newPath, 
+            name, 
+            icon: icon || "", 
+            parent_path: parentPath || null 
+          }).eq("path", originalPath);
+          
+          if (updateError) {
+            console.error(updateError);
+            alert("Failed to update category");
+            return;
+          }
+          
+          // Update all descendants
+          for (const desc of descendants) {
+            const newDescPath = desc.path.replace(originalPath, newPath);
+            const newDescParent = desc.parent_path ? desc.parent_path.replace(originalPath, newPath) : desc.parent_path;
+            await supabase.from("category_structure").update({ 
+              path: newDescPath, 
+              parent_path: newDescParent 
+            }).eq("path", desc.path);
+            
+            await supabase.from("metric_definitions").update({ category_path: newDescPath }).eq("category_path", desc.path);
+            await supabase.from("metric_values").update({ category_path: newDescPath }).eq("category_path", desc.path);
+          }
+          
+          // Update metrics and values for this category
+          await supabase.from("metric_definitions").update({ category_path: newPath }).eq("category_path", originalPath);
+          await supabase.from("metric_values").update({ category_path: newPath }).eq("category_path", originalPath);
+          
+          path = newPath;
+        } else {
+          // Just updating name/icon
+          const { error: catError } = await supabase.from("category_structure").update({ name, icon: icon || "" }).eq("path", path);
+          if (catError) {
+            console.error(catError);
+            alert("Failed to update category");
+            return;
+          }
         }
-
+      
         // Delete removed metrics and update existing ones
         const existingMetrics = metricDefinitions.filter(m => m.category_path === path);
         const metricsToKeep = [];
@@ -1700,6 +1800,205 @@
       await loadDashboard();
     }
 
+        // ==================== DATA HISTORY MANAGEMENT FUNCTIONS ====================
+    
+    function populateDataHistoryFilters() {
+      const filterSelect = document.getElementById("filterCategory");
+      if (!filterSelect) return;
+      filterSelect.innerHTML = '<option value="">All Categories</option>';
+      function addFilterOptions(cats, prefix = "") {
+        cats.forEach(cat => {
+          const option = document.createElement("option");
+          option.value = cat.path;
+          option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
+          filterSelect.appendChild(option);
+          if (cat.children && cat.children.length > 0) addFilterOptions(cat.children, prefix + "  ");
+        });
+      }
+      addFilterOptions(buildCategoryTree());
+    }
+    
+    async function loadDataHistory() {
+      const container = document.getElementById("dataHistoryTree");
+      if (!container) return;
+      container.innerHTML = "<p style='text-align: center; padding: 20px;'>Loading data...</p>";
+      const filterCategory = document.getElementById("filterCategory").value;
+      const filterStartDate = document.getElementById("filterStartDate").value;
+      const filterEndDate = document.getElementById("filterEndDate").value;
+      let query = supabase.from("metric_values").select("*").order("created_at", { ascending: false });
+      if (filterCategory) {
+        const descendants = getDescendants(filterCategory);
+        const allPaths = [filterCategory, ...descendants.map(d => d.path)];
+        query = query.in("category_path", allPaths);
+      }
+      if (filterStartDate) query = query.gte("created_at", new Date(filterStartDate).toISOString());
+      if (filterEndDate) {
+        const endDate = new Date(filterEndDate);
+        endDate.setHours(23, 59, 59, 999);
+        query = query.lte("created_at", endDate.toISOString());
+      }
+      const { data, error } = await query;
+      if (error) {
+        container.innerHTML = "<p class='no-data-message'>Error loading data</p>";
+        return;
+      }
+      if (!data || data.length === 0) {
+        container.innerHTML = "<p class='no-data-message'>No data entries found</p>";
+        return;
+      }
+      const grouped = {};
+      data.forEach(entry => {
+        if (!grouped[entry.category_path]) grouped[entry.category_path] = [];
+        grouped[entry.category_path].push(entry);
+      });
+      container.innerHTML = "";
+      const tree = buildCategoryTree();
+      renderDataTree(tree, container, grouped);
+    }
+    
+    function renderDataTree(categories, parentElement, dataGrouped) {
+      categories.forEach(cat => {
+        const entries = dataGrouped[cat.path] || [];
+        const hasData = entries.length > 0;
+        const hasChildrenWithData = cat.children && cat.children.some(child => checkHasData(child, dataGrouped));
+        if (!hasData && !hasChildrenWithData) return;
+        const categoryDiv = document.createElement("div");
+        categoryDiv.className = "tree-category";
+        const header = document.createElement("div");
+        header.className = "tree-category-header";
+        if (expandedCategories.has(cat.path)) header.classList.add("expanded");
+        header.innerHTML = `
+          <div class="tree-category-title">
+            <span class="tree-category-arrow ${expandedCategories.has(cat.path) ? 'expanded' : ''}">▶</span>
+            <span>${cat.icon} ${cat.name}</span>
+            <span style="color: #999; font-size: 0.9em;">(${entries.length} entries)</span>
+          </div>
+        `;
+        header.onclick = () => toggleCategoryExpansion(cat.path);
+        categoryDiv.appendChild(header);
+        const content = document.createElement("div");
+        content.className = "tree-category-content";
+        if (expandedCategories.has(cat.path)) content.classList.add("expanded");
+        if (entries.length > 0) {
+          entries.forEach(entry => {
+            const entryDiv = createDataEntryElement(entry);
+            content.appendChild(entryDiv);
+          });
+        }
+        if (cat.children && cat.children.length > 0) {
+          renderDataTree(cat.children, content, dataGrouped);
+        }
+        categoryDiv.appendChild(content);
+        parentElement.appendChild(categoryDiv);
+      });
+    }
+    
+    function checkHasData(category, dataGrouped) {
+      if (dataGrouped[category.path] && dataGrouped[category.path].length > 0) return true;
+      if (category.children) {
+        return category.children.some(child => checkHasData(child, dataGrouped));
+      }
+      return false;
+    }
+    
+    function toggleCategoryExpansion(path) {
+      if (expandedCategories.has(path)) {
+        expandedCategories.delete(path);
+      } else {
+        expandedCategories.add(path);
+      }
+      loadDataHistory();
+    }
+    
+    function createDataEntryElement(entry) {
+      const div = document.createElement("div");
+      div.className = "data-entry";
+      div.id = `entry_${entry.id}`;
+      if (editingEntries.has(entry.id)) div.classList.add("editing");
+      const isEditing = editingEntries.has(entry.id);
+      div.innerHTML = `
+        <div class="data-entry-header">
+          <div class="data-entry-date">${new Date(entry.created_at).toLocaleString()}</div>
+          <div class="data-entry-actions">
+            ${isEditing ? 
+              `<button onclick="saveDataEntry(${entry.id})" style="padding: 5px 15px;">Save</button>
+               <button onclick="cancelEditDataEntry(${entry.id})" class="secondary" style="padding: 5px 15px;">Cancel</button>` :
+              `<button onclick="editDataEntry(${entry.id})" class="secondary" style="padding: 5px 15px;">Edit</button>
+               <button onclick="deleteDataEntry(${entry.id})" class="danger" style="padding: 5px 15px;">Delete</button>`
+            }
+          </div>
+        </div>
+        <div class="data-entry-field">
+          <label>Metric</label>
+          <input type="text" value="${entry.metric_name}" disabled style="background: #1a1a2e; cursor: not-allowed;">
+        </div>
+        <div class="data-entry-field">
+          <label>Value</label>
+          <input type="number" step="any" id="value_${entry.id}" value="${entry.value}" ${isEditing ? '' : 'disabled'} style="${isEditing ? '' : 'background: #1a1a2e; cursor: not-allowed;'}">
+        </div>
+        <div class="data-entry-field">
+          <label>Percentile</label>
+          <input type="number" id="percentile_${entry.id}" value="${entry.percentile || ''}" ${isEditing ? '' : 'disabled'} style="${isEditing ? '' : 'background: #1a1a2e; cursor: not-allowed;'}">
+        </div>
+        <div class="data-entry-field">
+          <label>Date/Time</label>
+          <input type="datetime-local" id="datetime_${entry.id}" value="${new Date(entry.created_at).toISOString().slice(0, 16)}" ${isEditing ? '' : 'disabled'} style="${isEditing ? '' : 'background: #1a1a2e; cursor: not-allowed;'}">
+        </div>
+      `;
+      return div;
+    }
+    
+    function editDataEntry(entryId) {
+      editingEntries.add(entryId);
+      loadDataHistory();
+    }
+    
+    function cancelEditDataEntry(entryId) {
+      editingEntries.delete(entryId);
+      loadDataHistory();
+    }
+    
+    async function saveDataEntry(entryId) {
+      const value = parseFloat(document.getElementById(`value_${entryId}`).value);
+      const percentile = document.getElementById(`percentile_${entryId}`).value;
+      const datetime = document.getElementById(`datetime_${entryId}`).value;
+      const { error } = await supabase.from("metric_values").update({
+        value,
+        percentile: percentile ? parseFloat(percentile) : null,
+        created_at: new Date(datetime).toISOString()
+      }).eq("id", entryId);
+      if (error) {
+        alert("Failed to update entry");
+        return;
+      }
+      editingEntries.delete(entryId);
+      document.getElementById("status").textContent = "✅ Entry updated!";
+      await loadDataHistory();
+      await loadDashboard();
+      if (selectedCategory) await loadDetailStats(selectedCategory);
+    }
+    
+    async function deleteDataEntry(entryId) {
+      if (!confirm("Delete this entry permanently?")) return;
+      const { error } = await supabase.from("metric_values").delete().eq("id", entryId);
+      if (error) {
+        alert("Failed to delete entry");
+        return;
+      }
+      document.getElementById("status").textContent = "✅ Entry deleted!";
+      await loadDataHistory();
+      await loadDashboard();
+      if (selectedCategory) await loadDetailStats(selectedCategory);
+    }
+    
+    function clearFilters() {
+      document.getElementById("filterCategory").value = "";
+      document.getElementById("filterStartDate").value = "";
+      document.getElementById("filterEndDate").value = "";
+      loadDataHistory();
+    }
+    
+    // ==================== END DATA HISTORY FUNCTIONS ====================
     init();
   </script>
 </body>
