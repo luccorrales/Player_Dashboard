@@ -2059,10 +2059,11 @@
       loadDataHistory().then(() => {
         // Restore scroll position after reload
         if (entryOffsetTop) {
-          // Scroll to the entry being edited
+          // Scroll instantly to the entry being edited
           const reloadedEntry = document.getElementById(`entry_${entryId}`);
           if (reloadedEntry) {
-            reloadedEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // *** CHANGE HERE: Removed 'behavior: "smooth"' ***
+            reloadedEntry.scrollIntoView({ block: 'center' }); 
           }
         } else {
           window.scrollTo(0, scrollPosition);
@@ -2079,11 +2080,12 @@
       
       // Reload data history
       loadDataHistory().then(() => {
-        // Scroll back to the entry
+        // Scroll instantly back to the entry
         if (entryOffsetTop) {
           const reloadedEntry = document.getElementById(`entry_${entryId}`);
           if (reloadedEntry) {
-            reloadedEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // *** CHANGE HERE: Removed 'behavior: "smooth"' ***
+            reloadedEntry.scrollIntoView({ block: 'center' }); 
           }
         }
       });
@@ -2104,7 +2106,6 @@
       }
       editingEntries.delete(entryId);
       document.getElementById("status").textContent = "✅ Entry updated!";
-      
       // Store entry position before reload
       const entryElement = document.getElementById(`entry_${entryId}`);
       const entryOffsetTop = entryElement ? entryElement.offsetTop : null;
@@ -2113,11 +2114,12 @@
       await loadDashboard();
       if (selectedCategory) await loadDetailStats(selectedCategory);
       
-      // Scroll back to the updated entry
+      // Scroll instantly back to the updated entry
       if (entryOffsetTop) {
         const reloadedEntry = document.getElementById(`entry_${entryId}`);
         if (reloadedEntry) {
-          reloadedEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // *** CHANGE HERE: Removed 'behavior: "smooth"' ***
+          reloadedEntry.scrollIntoView({ block: 'center' });
         }
       }
     }
