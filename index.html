@@ -2049,12 +2049,44 @@
     
     function editDataEntry(entryId) {
       editingEntries.add(entryId);
-      loadDataHistory();
+      
+      // Store scroll position before reload
+      const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+      const entryElement = document.getElementById(`entry_${entryId}`);
+      const entryOffsetTop = entryElement ? entryElement.offsetTop : null;
+      
+      // Reload data history
+      loadDataHistory().then(() => {
+        // Restore scroll position after reload
+        if (entryOffsetTop) {
+          // Scroll to the entry being edited
+          const reloadedEntry = document.getElementById(`entry_${entryId}`);
+          if (reloadedEntry) {
+            reloadedEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } else {
+          window.scrollTo(0, scrollPosition);
+        }
+      });
     }
     
     function cancelEditDataEntry(entryId) {
       editingEntries.delete(entryId);
-      loadDataHistory();
+      
+      // Store entry position before reload
+      const entryElement = document.getElementById(`entry_${entryId}`);
+      const entryOffsetTop = entryElement ? entryElement.offsetTop : null;
+      
+      // Reload data history
+      loadDataHistory().then(() => {
+        // Scroll back to the entry
+        if (entryOffsetTop) {
+          const reloadedEntry = document.getElementById(`entry_${entryId}`);
+          if (reloadedEntry) {
+            reloadedEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      });
     }
     
     async function saveDataEntry(entryId) {
@@ -2072,9 +2104,22 @@
       }
       editingEntries.delete(entryId);
       document.getElementById("status").textContent = "✅ Entry updated!";
+      
+      // Store entry position before reload
+      const entryElement = document.getElementById(`entry_${entryId}`);
+      const entryOffsetTop = entryElement ? entryElement.offsetTop : null;
+      
       await loadDataHistory();
       await loadDashboard();
       if (selectedCategory) await loadDetailStats(selectedCategory);
+      
+      // Scroll back to the updated entry
+      if (entryOffsetTop) {
+        const reloadedEntry = document.getElementById(`entry_${entryId}`);
+        if (reloadedEntry) {
+          reloadedEntry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
     }
     
     async function deleteDataEntry(entryId) {
