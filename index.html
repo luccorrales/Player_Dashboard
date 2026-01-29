@@ -10,7 +10,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>🎮 Personal Life Statistics Dashboard</h1>
+    <h1>Life Progress</h1>
     
     <div id="status" class="status">Initializing...</div>
 
@@ -24,28 +24,43 @@
 
     <!-- DASHBOARD TAB -->
     <div id="dashboard" class="content active">
-      <div class="overall-score">
-        <h2>Overall Weighted Score</h2>
-        <div class="score" id="overallScore">--</div>
-        <p>Based on your personalized importance weights</p>
-      </div>
+      <section class="hero glass">
+        <div class="hero-inner">
+          <div class="hero-label">Total Life Level</div>
+          <div class="hero-score" id="overallScore">--</div>
+          <div class="hero-subtext">Weighted average across your life domains</div>
+        </div>
+      </section>
 
-      <div class="dashboard-container">
-        <div class="spider-chart-container">
-          <h2>Overall Performance</h2>
-          <canvas id="spiderChart"></canvas>
+      <section class="dashboard-grid">
+        <aside class="glass panel panel-left">
+          <div class="panel-header">
+            <h2>Character Stats</h2>
+            <div class="panel-subtitle">Percentiles + trend</div>
+          </div>
+          <div id="categoryButtons" class="stats-list"></div>
+        </aside>
+
+        <div class="glass panel panel-main">
+          <div class="panel-header">
+            <h2>Overall Performance</h2>
+            <div class="panel-subtitle">Radar view of your domains</div>
+          </div>
+          <div class="radar-wrap">
+            <canvas id="spiderChart"></canvas>
+          </div>
         </div>
-        
-        <div class="category-selector">
-          <h2>Select Category</h2>
-          <div id="categoryButtons"></div>
-        </div>
-      </div>
+      </section>
       
-      <div id="detailPanel" class="detail-panel" style="display: none;">
-        <div class="breadcrumb" id="breadcrumb"></div>
-        <h2 id="detailTitle">Category Details</h2>
-        <div class="stat-grid" id="detailStats"></div>
+      <section id="detailPanel" class="glass panel timeline-panel" style="display: none;">
+        <div class="timeline-header">
+          <div class="breadcrumb" id="breadcrumb"></div>
+          <div class="timeline-title">
+            <h2 id="detailTitle">History Timeline</h2>
+            <div class="panel-subtitle">Click a domain to view changes over time</div>
+          </div>
+        </div>
+
         <div class="history-chart">
           <div class="chart-controls">
             <div class="control-group">
@@ -57,22 +72,22 @@
                 <option value="yearly">Yearly</option>
                 <option value="custom">Custom Range</option>
               </select>
-              
+
               <label>Go Back:</label>
               <input type="number" id="timeUnits" value="6" min="1" max="100" onchange="updateChartSettings()">
               <span id="timeUnitsLabel">months</span>
-              
+
               <button onclick="refreshChart()" style="margin: 0;">Refresh</button>
             </div>
-            
+
             <div id="customDateRange" class="custom-date-range">
               <div class="control-group">
                 <label>Start Date:</label>
                 <input type="date" id="customStartDate">
-                
+
                 <label>End Date:</label>
                 <input type="date" id="customEndDate">
-                
+
                 <label>Aggregate By:</label>
                 <select id="customAggregation">
                   <option value="daily">Daily</option>
@@ -83,9 +98,13 @@
               </div>
             </div>
           </div>
-          <canvas id="detailChart"></canvas>
+          <div class="timeline-chart-wrap">
+            <canvas id="detailChart"></canvas>
+          </div>
         </div>
-      </div>
+
+        <div class="stat-grid" id="detailStats"></div>
+      </section>
     </div>
 
     <!-- INPUT TAB -->
