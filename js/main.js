@@ -23,6 +23,11 @@ let chartSettings = {
 
 let expandedCategories = new Set();
 let editingEntries = new Set();
+let sparklineCharts = new Map();
+
+function domIdFromPath(path) {
+  return path.replaceAll('.', '__');
+}
 
 // INITIALIZE
 async function init() {
@@ -190,16 +195,29 @@ function buildCategoryTree(parentPath = null, level = 0) {
 }
 
 function populateCategorySelectors() {
-  // Populate dashboard category buttons (top-level only)
+  // Populate dashboard category cards (top-level only)
   const buttonContainer = document.getElementById("categoryButtons");
   buttonContainer.innerHTML = "";
 
-  getTopLevelCategories().forEach(cat => {
-    const btn = document.createElement("button");
-    btn.className = "category-btn";
-    btn.innerHTML = `<span>${cat.icon} ${cat.name}</span><span>→</span>`;
-    btn.onclick = () => selectCategory(cat.path);
-    buttonContainer.appendChild(btn);
+  getTopLevelCategories().forEach((cat, idx) => {
+    const id = domIdFromPath(cat.path);
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "metric-card fade-in";
+    card.style.animationDelay = `${Math.min(idx * 35, 280)}ms`;
+    card.onclick = () => selectCategory(cat.path);
+    card.innerHTML = `
+      <div>
+        <div class="metric-title">${cat.icon} ${cat.name}</div>
+        <div class="metric-subrow">
+          <div class="metric-pct" id="pct_${id}">--</div>
+          <div class="metric-label">percentile</div>
+          <div class="metric-delta neutral" id="delta_${id}">—</div>
+        </div>
+      </div>
+      <canvas class="sparkline" id="spark_${id}" width="96" height="32"></canvas>
+    `;
+    buttonContainer.appendChild(card);
   });
 
   // Populate INPUT tab select (only categories with metrics)
@@ -412,11 +430,11 @@ async function selectCategory(path) {
   selectedCategory = path;
 
   // Only update button states if we clicked a category button (not a stat item)
-  if (typeof event !== 'undefined' && event?.target?.closest?.('.category-btn')) {
-    document.querySelectorAll('.category-btn').forEach(btn => {
+  if (typeof event !== 'undefined' && event?.target?.closest?.('.metric-card')) {
+    document.querySelectorAll('.metric-card').forEach(btn => {
       btn.classList.remove('selected');
     });
-    event.target.closest('.category-btn').classList.add('selected');
+    event.target.closest('.metric-card').classList.add('selected');
   }
 
   document.getElementById("detailPanel").style.display = "block";
@@ -667,6 +685,7 @@ async function loadDetailChart(path) {
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,
       plugins: {
         title: {
           display: true,
@@ -845,6 +864,8 @@ function refreshChart() {
 async function loadDashboard() {
   const topLevel = getTopLevelCategories();
   const categoryAverages = {};
+  const categoryDeltas = {};
+  const categorySpark = {};
 
   for (const cat of topLevel) {
     const descendants = getDescendants(cat.path);
@@ -852,22 +873,56 @@ async function loadDashboard() {
 
     const { data } = await supabase
       .from("metric_values")
-      .select("percentile")
+      .select("percentile, metric_name, category_path, created_at")
       .in("category_path", allPaths)
       .not("percentile", "is", null)
       .order("created_at", { ascending: false })
-      .limit(10);
+      .limit(80);
 
-    if (data && data.length > 0) {
-      const avg = data.reduce((sum, d) => sum + d.percentile, 0) / data.length;
-      categoryAverages[cat.path] = avg;
-    } else {
+    if (!data || data.length === 0) {
       categoryAverages[cat.path] = 0;
+      categoryDeltas[cat.path] = null;
+      categorySpark[cat.path] = [];
+      continue;
     }
+
+    // Latest + previous per unique metric (so one metric doesn't dominate)
+    const latestByMetric = new Map();
+    const prevByMetric = new Map();
+    const series = [];
+
+    for (const row of data) {
+      series.push(row.percentile);
+      const key = `${row.category_path}__${row.metric_name}`;
+      if (!latestByMetric.has(key)) {
+        latestByMetric.set(key, row.percentile);
+      } else if (!prevByMetric.has(key)) {
+        prevByMetric.set(key, row.percentile);
+      }
+    }
+
+    const latestVals = Array.from(latestByMetric.values()).filter(v => v !== null && v !== undefined);
+    const prevVals = Array.from(prevByMetric.values()).filter(v => v !== null && v !== undefined);
+
+    const latestAvg = latestVals.length ? (latestVals.reduce((a, b) => a + b, 0) / latestVals.length) : 0;
+    const prevAvg = prevVals.length ? (prevVals.reduce((a, b) => a + b, 0) / prevVals.length) : null;
+
+    categoryAverages[cat.path] = latestAvg;
+    categoryDeltas[cat.path] = prevAvg === null ? null : (latestAvg - prevAvg);
+
+    categorySpark[cat.path] = series.slice(0, 14).reverse();
   }
 
   const ctx = document.getElementById("spiderChart");
   if (spiderChart) spiderChart.destroy();
+
+  const radarGradient = (() => {
+    const c = ctx.getContext('2d');
+    const g = c.createLinearGradient(0, 0, 0, 320);
+    g.addColorStop(0, 'rgba(124, 92, 255, 0.30)');
+    g.addColorStop(1, 'rgba(61, 214, 255, 0.10)');
+    return g;
+  })();
 
   spiderChart = new Chart(ctx, {
     type: "radar",
@@ -876,20 +931,21 @@ async function loadDashboard() {
       datasets: [{
         label: "Current Percentiles",
         data: topLevel.map(c => categoryAverages[c.path] || 0),
-        backgroundColor: "rgba(102, 126, 234, 0.3)",
-        borderColor: "#667eea",
-        borderWidth: 2,
-        pointBackgroundColor: "#667eea",
-        pointBorderColor: "#fff",
-        pointBorderWidth: 2
+        backgroundColor: radarGradient,
+        borderColor: "rgba(124, 92, 255, 0.75)",
+        borderWidth: 1.5,
+        pointBackgroundColor: "rgba(232, 234, 242, 0.95)",
+        pointBorderColor: "rgba(124, 92, 255, 0.9)",
+        pointBorderWidth: 2,
+        pointRadius: 3
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
-          labels: { color: '#e0e0e0' }
+          labels: { color: 'rgba(232,234,242,0.78)' }
         }
       },
       scales: {
@@ -898,11 +954,12 @@ async function loadDashboard() {
           max: 100,
           ticks: {
             stepSize: 20,
-            color: '#e0e0e0',
+            color: 'rgba(232,234,242,0.55)',
             backdropColor: 'transparent'
           },
-          grid: { color: '#3a3a4e' },
-          pointLabels: { color: '#e0e0e0' }
+          grid: { color: 'rgba(255,255,255,0.10)' },
+          angleLines: { color: 'rgba(255,255,255,0.10)' },
+          pointLabels: { color: 'rgba(232,234,242,0.80)', font: { size: 12, weight: '600' } }
         }
       }
     }
@@ -919,6 +976,60 @@ async function loadDashboard() {
 
   const overallScore = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 0;
   document.getElementById("overallScore").textContent = overallScore;
+
+  // Update cards + sparklines
+  for (const cat of topLevel) {
+    const id = domIdFromPath(cat.path);
+    const pctEl = document.getElementById(`pct_${id}`);
+    const deltaEl = document.getElementById(`delta_${id}`);
+    const sparkCanvas = document.getElementById(`spark_${id}`);
+
+    if (pctEl) pctEl.textContent = Math.round(categoryAverages[cat.path] || 0);
+
+    const delta = categoryDeltas[cat.path];
+    if (deltaEl) {
+      deltaEl.classList.remove('good', 'bad', 'neutral');
+      if (delta === null || Number.isNaN(delta)) {
+        deltaEl.classList.add('neutral');
+        deltaEl.textContent = '—';
+      } else {
+        const d = Math.round(delta);
+        if (d > 0) deltaEl.classList.add('good');
+        else if (d < 0) deltaEl.classList.add('bad');
+        else deltaEl.classList.add('neutral');
+        deltaEl.textContent = `${d > 0 ? '+' : ''}${d}`;
+      }
+    }
+
+    // Sparkline
+    if (sparkCanvas) {
+      const series = categorySpark[cat.path] || [];
+      const existing = sparklineCharts.get(cat.path);
+      if (existing) existing.destroy();
+
+      sparklineCharts.set(cat.path, new Chart(sparkCanvas, {
+        type: 'line',
+        data: {
+          labels: series.map((_, i) => i),
+          datasets: [{
+            data: series,
+            borderColor: 'rgba(61, 214, 255, 0.9)',
+            backgroundColor: 'rgba(61, 214, 255, 0.10)',
+            borderWidth: 2,
+            tension: 0.35,
+            pointRadius: 0,
+            fill: true
+          }]
+        },
+        options: {
+          responsive: false,
+          animation: { duration: 300 },
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: { x: { display: false }, y: { display: false, min: 0, max: 100 } }
+        }
+      }));
+    }
+  }
 }
 
 // MODAL FUNCTIONS
