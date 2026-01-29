@@ -1,4 +1,6 @@
-// percentile-financial.js
+// percentile-financial.js (ES module)
+import { percentileFunctions } from './registry.js';
+import { calculatePercentileFromBenchmarks } from './percentile-utils.js';
 
 percentileFunctions.networth_percentile = (value, age) => {
   const ageGroup = Math.floor(age / 10) * 10;

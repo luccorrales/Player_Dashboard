@@ -1,4 +1,6 @@
-// Emotional category percentile functions
+// Emotional category percentile functions (ES module)
+import { percentileFunctions } from './registry.js';
+import { calculatePercentileFromBenchmarks, cumulativeNormalDistribution } from './percentile-utils.js';
 
 // Emotional Intelligence (EQ) Score
 percentileFunctions.emotional_intelligence_percentile = (eqScore) => {

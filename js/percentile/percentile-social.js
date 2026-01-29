@@ -1,5 +1,6 @@
-// percentile-social.js
-// NOTE: Removed 'export' statement. Functions are assigned to the global percentileFunctions object.
+// percentile-social.js (ES module)
+import { percentileFunctions } from './registry.js';
+import { calculatePercentileFromBenchmarks } from './percentile-utils.js';
 
 // Add social metric percentiles here
 // Example:

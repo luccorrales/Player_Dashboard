@@ -1,4 +1,6 @@
-// percentile-physical.js
+// percentile-physical.js (ES module)
+import { percentileFunctions } from './registry.js';
+import { calculatePercentileFromBenchmarks } from './percentile-utils.js';
 
 percentileFunctions.bench_press_percentile = (weight, age, bodyweight) => {
   const ratio = weight / bodyweight;

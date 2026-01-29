@@ -1,10 +1,11 @@
-// percentile-cognitive.js
+// percentile-cognitive.js (ES module)
+import { percentileFunctions } from './registry.js';
+import { cumulativeNormalDistribution } from './percentile-utils.js';
 
 percentileFunctions.iq_percentile = (value) => {
   const mean = 100;
   const sd = 15;
   const z = (value - mean) / sd;
-  // cumulativeNormalDistribution is globally available from index.js
   return Math.round(cumulativeNormalDistribution(z) * 100);
 };
 

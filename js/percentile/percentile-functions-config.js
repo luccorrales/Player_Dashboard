@@ -1,5 +1,5 @@
-// Configuration for available percentile functions
-var percentileFunctionsConfig = {
+// Configuration for available percentile functions (ES module)
+export const percentileFunctionsConfig = {
   functions: [
     { value: 'networth_percentile', label: 'Net Worth (age-adjusted)', category: 'financial' },
     { value: 'income_percentile', label: 'Income', category: 'financial' },

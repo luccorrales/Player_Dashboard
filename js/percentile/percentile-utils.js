@@ -1,6 +1,6 @@
-// percentile-utils.js
+// percentile-utils.js (ES module)
 
-function calculatePercentileFromBenchmarks(value, benchmarks) {
+export function calculatePercentileFromBenchmarks(value, benchmarks) {
   if (value <= benchmarks[0]) return 0;
   if (value >= benchmarks[benchmarks.length - 1]) return 100;
 
@@ -18,7 +18,7 @@ function calculatePercentileFromBenchmarks(value, benchmarks) {
   return 50;
 }
 
-function cumulativeNormalDistribution(z) {
+export function cumulativeNormalDistribution(z) {
   const t = 1 / (1 + 0.2316419 * Math.abs(z));
   const d = 0.3989423 * Math.exp(-z * z / 2);
   const prob =
@@ -30,4 +30,8 @@ function cumulativeNormalDistribution(z) {
         t * (1.781478 + t * (-1.821256 + t * 1.330274))));
 
   return z > 0 ? 1 - prob : prob;
+}
+
+export function invertPercentile(percentile) {
+  return 100 - percentile;
 }
