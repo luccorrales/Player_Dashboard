@@ -10,6 +10,7 @@ const Chart = window.Chart;
 let categoryStructure = [];
 let spiderChart, detailChart;
 let currentWeights = {};
+let currentGoals = {}; // NEW: Store goal percentiles
 let selectedCategory = null;
 let userProfile = {};
 let metricDefinitions = [];
@@ -31,24 +32,16 @@ function domIdFromPath(path) {
 
 // INITIALIZE
 async function init() {
-  // 1. Initial status update (Keep for connection check)
   document.getElementById("status").textContent = "✅ Connected to Supabase";
-
-  // 2. Load necessary reference data first
   await loadPersonalInfo();
+  const categoriesLoaded = await loadCategoryStructure(false);
 
-  // Load categories (structure)
-  const categoriesLoaded = await loadCategoryStructure(false); // Pass false to suppress internal population
-
-  // 3. Load metric definitions (CRITICAL: Must happen before population)
   if (categoriesLoaded) {
     await loadMetricDefinitions();
-
-    // 4. Now that metrics are defined, populate selectors and continue initialization
     populateCategorySelectors();
     populateDataHistoryFilters();
-
     await loadWeights();
+    await loadGoals(); // NEW: Load goals
     await loadDashboard();
     document.getElementById("status").textContent = "✅ Dashboard initialized and connected!";
   } else {
@@ -104,7 +97,6 @@ function switchTab(tabName) {
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById(tabName).classList.add('active');
-  // Inline onclick relies on global `event`
   if (typeof event !== 'undefined' && event?.target) {
     event.target.classList.add('active');
   }
@@ -113,6 +105,8 @@ function switchTab(tabName) {
     renderCategoryHierarchy();
   } else if (tabName === 'datahistory') {
     loadDataHistory();
+  } else if (tabName === 'goals') {
+    renderGoalsForm(); // NEW: Render goals form
   }
 }
 
@@ -168,7 +162,6 @@ async function initializeDefaultStructure() {
 
   await supabase.from("category_structure").insert(defaults);
 
-  // Add default metrics
   const defaultMetrics = [
     { category_path: "financial.networth", metric_name: "Net Worth", unit: "USD", percentile_function: "networth_percentile", parameters: ["value", "age"] },
     { category_path: "physical.strength", metric_name: "Bench Press", unit: "lbs", percentile_function: "bench_press_percentile", parameters: ["weight", "age", "bodyweight"] }
@@ -194,8 +187,104 @@ function buildCategoryTree(parentPath = null, level = 0) {
   }));
 }
 
+// NEW: Helper function to get percentile zone
+function getPercentileZone(percentile) {
+  if (percentile < 26) return { name: "Needs Work", class: "needs-work", color: "var(--zone-needs-work)" };
+  if (percentile < 51) return { name: "Below Average", class: "below-avg", color: "var(--zone-below-avg)" };
+  if (percentile < 76) return { name: "Above Average", class: "above-avg", color: "var(--zone-above-avg)" };
+  if (percentile < 91) return { name: "Strong", class: "strong", color: "var(--zone-strong)" };
+  return { name: "Elite", class: "elite", color: "var(--zone-elite)" };
+}
+
+// NEW: Create percentile band visualization
+function createPercentileBand(percentile) {
+  const zone = getPercentileZone(percentile);
+  return `
+    <div class="percentile-band-container">
+      <div class="percentile-band">
+        <div class="percentile-marker" style="left: ${percentile}%;"></div>
+      </div>
+      <div class="percentile-zone-label">${zone.name}</div>
+    </div>
+  `;
+}
+
+// NEW: Create goal progress visualization
+function createGoalProgress(current, target, categoryPath) {
+  if (!target || target === 0) return '';
+  
+  const gap = target - current;
+  const progress = Math.min((current / target) * 100, 100);
+  
+  let statusClass = 'on-track';
+  if (current < target * 0.7) statusClass = 'far-behind';
+  else if (current < target * 0.85) statusClass = 'behind';
+  
+  return `
+    <div class="goal-progress-container">
+      <div class="goal-progress-header">
+        <span class="goal-progress-label">🎯 Goal Progress</span>
+        <span class="goal-progress-values">${Math.round(current)} / ${Math.round(target)}</span>
+      </div>
+      <div class="goal-progress-bar">
+        <div class="goal-progress-fill ${statusClass}" style="width: ${progress}%"></div>
+      </div>
+      <div class="goal-gap">${gap > 0 ? `${Math.round(gap)} points to goal` : '🎉 Goal achieved!'}</div>
+    </div>
+  `;
+}
+
+// NEW: Calculate velocity over the selected timeframe
+function calculateVelocity(dataPoints) {
+  if (dataPoints.length < 2) return null;
+  
+  // Get first and last data points
+  const first = dataPoints[0];
+  const last = dataPoints[dataPoints.length - 1];
+  
+  const change = last.percentile - first.percentile;
+  const timeDiff = new Date(last.created_at) - new Date(first.created_at);
+  const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+  
+  return {
+    change: change,
+    days: daysDiff,
+    ratePerMonth: (change / daysDiff) * 30
+  };
+}
+
+// NEW: Create velocity indicator
+function createVelocityIndicator(velocity, timeframe) {
+  if (!velocity) return '';
+  
+  const { change, days, ratePerMonth } = velocity;
+  const arrow = change > 0 ? '↗' : change < 0 ? '↘' : '→';
+  const color = change > 0 ? 'var(--good)' : change < 0 ? 'var(--bad)' : 'var(--muted)';
+  
+  // Format timeframe based on chartSettings
+  let timeframeText = timeframe;
+  const scale = chartSettings.scale;
+  const units = chartSettings.units;
+  
+  if (scale === 'daily') {
+    timeframeText = units === 1 ? '1 day' : `${units} days`;
+  } else if (scale === 'weekly') {
+    timeframeText = units === 1 ? '1 week' : `${units} weeks`;
+  } else if (scale === 'monthly') {
+    timeframeText = units === 1 ? '1 month' : `${units} months`;
+  } else if (scale === 'yearly') {
+    timeframeText = units === 1 ? '1 year' : `${units} years`;
+  }
+  
+  return `
+    <div class="velocity-indicator">
+      <span class="velocity-arrow" style="color: ${color};">${arrow}</span>
+      <span>${change > 0 ? '+' : ''}${change.toFixed(1)} over ${timeframeText}</span>
+    </div>
+  `;
+}
+
 function populateCategorySelectors() {
-  // Populate dashboard category cards (top-level only)
   const buttonContainer = document.getElementById("categoryButtons");
   buttonContainer.innerHTML = "";
 
@@ -207,34 +296,37 @@ function populateCategorySelectors() {
     card.style.animationDelay = `${Math.min(idx * 35, 280)}ms`;
     card.onclick = () => selectCategory(cat.path);
     card.innerHTML = `
-      <div>
-        <div class="metric-title">${cat.icon} ${cat.name}</div>
-        <div class="metric-subrow">
-          <div class="metric-pct" id="pct_${id}">--</div>
-          <div class="metric-label">percentile</div>
-          <div class="metric-delta neutral" id="delta_${id}">—</div>
+      <div class="metric-card-top">
+        <div>
+          <div class="metric-title">${cat.icon} ${cat.name}</div>
+          <div class="metric-subrow">
+            <div class="metric-pct" id="pct_${id}">--</div>
+            <div class="metric-label">percentile</div>
+            <div class="metric-delta neutral" id="delta_${id}">—</div>
+          </div>
         </div>
+        <canvas class="sparkline" id="spark_${id}" width="96" height="32"></canvas>
       </div>
-      <canvas class="sparkline" id="spark_${id}" width="96" height="32"></canvas>
+      <div id="band_${id}"></div>
+      <div id="goal_${id}"></div>
+      <div id="velocity_${id}"></div>
     `;
     buttonContainer.appendChild(card);
   });
 
-  // Populate INPUT tab select (only categories with metrics)
+  // Populate INPUT tab select
   const pathSelect = document.getElementById("categoryPathSelect");
   pathSelect.innerHTML = '<option value="">Select...</option>';
 
   function addInputOptions(cats, prefix = "") {
     cats.forEach(cat => {
       const hasMetrics = metricDefinitions.some(m => m.category_path === cat.path);
-
       if (hasMetrics) {
         const option = document.createElement("option");
         option.value = cat.path;
         option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
         pathSelect.appendChild(option);
       }
-
       if (cat.children && cat.children.length > 0) {
         addInputOptions(cat.children, prefix + "  ");
       }
@@ -243,7 +335,7 @@ function populateCategorySelectors() {
 
   addInputOptions(buildCategoryTree());
 
-  // Populate MODAL parent select (ALL categories)
+  // Populate MODAL parent select
   const parentSelect = document.getElementById("modalParentSelect");
   parentSelect.innerHTML = '<option value="">Top Level</option>';
 
@@ -253,7 +345,6 @@ function populateCategorySelectors() {
       option.value = cat.path;
       option.textContent = prefix + (cat.icon || "") + (cat.icon ? " " : "") + cat.name;
       parentSelect.appendChild(option);
-
       if (cat.children && cat.children.length > 0) {
         addAllCategoryOptions(cat.children, prefix + "  ");
       }
@@ -310,14 +401,12 @@ function calculatePercentileForMetric(metricId) {
 
   if (!func) return;
 
-  // Build parameters array
   const params = [value];
   if (metric.parameters && Array.isArray(metric.parameters)) {
     metric.parameters.forEach(param => {
       if (param === 'age' && userProfile.age) params.push(userProfile.age);
       if (param === 'gender' && userProfile.gender) params.push(userProfile.gender);
       if (param === 'bodyweight') {
-        // Try to find bodyweight metric in current inputs
         const bwMetric = metricDefinitions.find(m =>
           m.category_path.includes('physical') && m.metric_name.toLowerCase().includes('weight')
         );
@@ -358,7 +447,6 @@ async function addMetricValues() {
 
     let percentile = null;
 
-    // Calculate percentile if function exists
     if (metric.percentile_function && percentileFunctions[metric.percentile_function]) {
       const func = percentileFunctions[metric.percentile_function];
       const params = [value];
@@ -411,7 +499,6 @@ async function addMetricValues() {
 
   document.getElementById("status").textContent = "✅ Values added!";
 
-  // Clear inputs
   metrics.forEach(m => {
     const input = document.getElementById(`metric_${m.id}`);
     if (input) input.value = "";
@@ -429,7 +516,6 @@ async function addMetricValues() {
 async function selectCategory(path) {
   selectedCategory = path;
 
-  // Only update button states if we clicked a category button (not a stat item)
   if (typeof event !== 'undefined' && event?.target?.closest?.('.metric-card')) {
     document.querySelectorAll('.metric-card').forEach(btn => {
       btn.classList.remove('selected');
@@ -492,28 +578,28 @@ async function loadDetailStats(path) {
   const children = getChildren(path);
   children.forEach(child => {
     const childData = grouped[child.path];
+    const childGoal = currentGoals[child.path];
 
-    // Check if child has direct data
     if (childData) {
       Object.keys(childData).forEach(metricName => {
         const latest = childData[metricName][0];
         const statItem = document.createElement("div");
         statItem.className = "stat-item";
+        if (childGoal) statItem.classList.add('has-goal');
         statItem.style.cursor = "pointer";
         statItem.onclick = () => selectCategory(child.path);
         statItem.innerHTML = `
           <h4>${child.icon} ${child.name} - ${metricName}</h4>
           <div class="stat-value">${latest.value}</div>
           <div class="stat-percentile">${latest.percentile ? latest.percentile + 'th percentile' : 'No percentile'}</div>
+          ${childGoal ? `<div style="font-size: 0.85em; color: #999; margin-top: 8px;">🎯 Goal: ${childGoal}th</div>` : ''}
         `;
         statsGrid.appendChild(statItem);
       });
     } else {
-      // Child has no direct data - check if it has children with data
       const grandchildren = getChildren(child.path);
       const grandchildrenPaths = grandchildren.map(gc => gc.path);
 
-      // Collect all data from grandchildren
       const grandchildrenData = [];
       grandchildrenPaths.forEach(gcPath => {
         if (grouped[gcPath]) {
@@ -523,9 +609,7 @@ async function loadDetailStats(path) {
         }
       });
 
-      // If grandchildren have data, show aggregated stat for parent
       if (grandchildrenData.length > 0) {
-        // Calculate average percentile from latest entries of each grandchild metric
         const latestByMetric = {};
         grandchildrenData.forEach(entry => {
           const key = `${entry.category_path}_${entry.metric_name}`;
@@ -542,6 +626,7 @@ async function loadDetailStats(path) {
           const avgPercentile = Math.round(percentiles.reduce((a, b) => a + b, 0) / percentiles.length);
           const statItem = document.createElement("div");
           statItem.className = "stat-item";
+          if (childGoal) statItem.classList.add('has-goal');
           statItem.style.cursor = "pointer";
           statItem.onclick = () => selectCategory(child.path);
           statItem.innerHTML = `
@@ -551,6 +636,7 @@ async function loadDetailStats(path) {
             <div style="font-size: 0.8em; color: #999; margin-top: 5px;">
               ${grandchildren.length} subcategories
             </div>
+            ${childGoal ? `<div style="font-size: 0.85em; color: #999; margin-top: 8px;">🎯 Goal: ${childGoal}th</div>` : ''}
           `;
           statsGrid.appendChild(statItem);
         }
@@ -587,9 +673,8 @@ function getDescendants(path) {
   return all;
 }
 
-// LOAD DETAIL CHART
+// LOAD DETAIL CHART (with goal line)
 async function loadDetailChart(path) {
-  // Collect all descendant paths for chart (include all levels below)
   function getAllDescendantPaths(parentPath) {
     const directChildren = getChildren(parentPath);
     let paths = directChildren.map(c => c.path);
@@ -602,7 +687,6 @@ async function loadDetailChart(path) {
   const descendantPaths = getAllDescendantPaths(path);
   const allPaths = descendantPaths.length > 0 ? descendantPaths : [path];
 
-  // Calculate date range based on settings
   const endDate = new Date();
   let startDate = new Date();
 
@@ -640,15 +724,12 @@ async function loadDetailChart(path) {
   const ctx = document.getElementById("detailChart");
   if (detailChart) detailChart.destroy();
 
-  // Determine aggregation level
   const aggregationScale = chartSettings.scale === 'custom' ?
     chartSettings.customAggregation :
     getAggregationLevel(chartSettings.scale);
 
-  // Aggregate data
   const aggregatedData = aggregateData(data, aggregationScale);
 
-  // Build datasets
   const datasets = {};
   aggregatedData.forEach(entry => {
     const key = `${entry.category_path}_${entry.metric_name}`;
@@ -677,11 +758,28 @@ async function loadDetailChart(path) {
     }
   });
 
+  // NEW: Add goal line if exists
+  const goalValue = currentGoals[path];
+  const chartDatasets = Object.values(datasets);
+  
+  if (goalValue && labels.length > 0) {
+    chartDatasets.push({
+      label: '🎯 Goal Target',
+      data: labels.map(label => ({ x: label, y: goalValue })),
+      borderColor: 'rgba(124, 92, 255, 0.7)',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      fill: false,
+      tension: 0
+    });
+  }
+
   detailChart = new Chart(ctx, {
     type: "line",
     data: {
       labels,
-      datasets: Object.values(datasets)
+      datasets: chartDatasets
     },
     options: {
       responsive: true,
@@ -713,14 +811,12 @@ async function loadDetailChart(path) {
   });
 }
 
-// Get aggregation level (one level below selected scale)
 function getAggregationLevel(scale) {
   const levels = ['hourly', 'daily', 'weekly', 'monthly', 'yearly'];
   const currentIndex = levels.indexOf(scale);
   return currentIndex > 0 ? levels[currentIndex - 1] : 'hourly';
 }
 
-// Aggregate data by time period
 function aggregateData(rawData, aggregationScale) {
   const grouped = {};
 
@@ -735,11 +831,11 @@ function aggregateData(rawData, aggregationScale) {
         break;
       }
       case 'daily':
-        periodKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        periodKey = date.toISOString().split('T')[0];
         break;
       case 'weekly': {
         const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay()); // Start of week (Sunday)
+        weekStart.setDate(date.getDate() - date.getDay());
         periodKey = weekStart.toISOString().split('T')[0];
         break;
       }
@@ -773,7 +869,6 @@ function aggregateData(rawData, aggregationScale) {
     }
   });
 
-  // Calculate averages
   return Object.values(grouped).map(group => ({
     category_path: group.category_path,
     metric_name: group.metric_name,
@@ -785,7 +880,6 @@ function aggregateData(rawData, aggregationScale) {
   }));
 }
 
-// Format date label based on aggregation
 function formatDateLabel(dateStr, aggregationScale) {
   const date = new Date(dateStr);
 
@@ -805,7 +899,6 @@ function formatDateLabel(dateStr, aggregationScale) {
   }
 }
 
-// Update chart settings UI
 function updateChartSettings() {
   const scale = document.getElementById("timeScale").value;
   const units = document.getElementById("timeUnits").value;
@@ -813,7 +906,6 @@ function updateChartSettings() {
   chartSettings.scale = scale;
   chartSettings.units = parseInt(units);
 
-  // Update label
   const labelMap = {
     daily: 'days',
     weekly: 'weeks',
@@ -822,13 +914,11 @@ function updateChartSettings() {
   };
   document.getElementById("timeUnitsLabel").textContent = labelMap[scale] || '';
 
-  // Show/hide custom date range
   const customRange = document.getElementById("customDateRange");
   if (scale === 'custom') {
     customRange.style.display = 'block';
     document.getElementById("timeUnits").disabled = true;
 
-    // Set default dates if empty
     if (!document.getElementById("customEndDate").value) {
       document.getElementById("customEndDate").value = new Date().toISOString().split('T')[0];
     }
@@ -847,7 +937,6 @@ function updateChartSettings() {
   }
 }
 
-// Refresh chart with current settings
 function refreshChart() {
   if (chartSettings.scale === 'custom') {
     chartSettings.customStart = document.getElementById("customStartDate").value;
@@ -855,27 +944,57 @@ function refreshChart() {
     chartSettings.customAggregation = document.getElementById("customAggregation").value;
   }
 
+  // Refresh the dashboard to update velocity indicators
+  loadDashboard();
+  
   if (selectedCategory) {
     loadDetailChart(selectedCategory);
   }
 }
 
-// LOAD SPIDER CHART
+// LOAD SPIDER CHART (with goal overlays and enhanced velocity)
 async function loadDashboard() {
   const topLevel = getTopLevelCategories();
   const categoryAverages = {};
   const categoryDeltas = {};
   const categorySpark = {};
+  const categoryVelocities = {}; // NEW: Store velocity data
 
   for (const cat of topLevel) {
     const descendants = getDescendants(cat.path);
     const allPaths = [cat.path, ...descendants.map(d => d.path)];
+
+    // NEW: Calculate date range based on current chartSettings
+    const endDate = new Date();
+    let startDate = new Date();
+    
+    if (chartSettings.scale === 'custom') {
+      startDate = chartSettings.customStart ? new Date(chartSettings.customStart) : new Date(endDate - 180 * 24 * 60 * 60 * 1000);
+    } else {
+      const units = chartSettings.units || 6;
+      switch (chartSettings.scale) {
+        case 'daily':
+          startDate.setDate(startDate.getDate() - units);
+          break;
+        case 'weekly':
+          startDate.setDate(startDate.getDate() - units * 7);
+          break;
+        case 'monthly':
+          startDate.setMonth(startDate.getMonth() - units);
+          break;
+        case 'yearly':
+          startDate.setFullYear(startDate.getFullYear() - units);
+          break;
+      }
+    }
 
     const { data } = await supabase
       .from("metric_values")
       .select("percentile, metric_name, category_path, created_at")
       .in("category_path", allPaths)
       .not("percentile", "is", null)
+      .gte("created_at", startDate.toISOString())
+      .lte("created_at", endDate.toISOString())
       .order("created_at", { ascending: false })
       .limit(80);
 
@@ -883,10 +1002,11 @@ async function loadDashboard() {
       categoryAverages[cat.path] = 0;
       categoryDeltas[cat.path] = null;
       categorySpark[cat.path] = [];
+      categoryVelocities[cat.path] = null;
       continue;
     }
 
-    // Latest + previous per unique metric (so one metric doesn't dominate)
+    // Calculate latest and previous averages
     const latestByMetric = new Map();
     const prevByMetric = new Map();
     const series = [];
@@ -909,8 +1029,11 @@ async function loadDashboard() {
 
     categoryAverages[cat.path] = latestAvg;
     categoryDeltas[cat.path] = prevAvg === null ? null : (latestAvg - prevAvg);
-
     categorySpark[cat.path] = series.slice(0, 14).reverse();
+    
+    // NEW: Calculate velocity based on timeframe (all data in range, sorted ascending)
+    const timeframeData = [...data].reverse(); // Reverse to get ascending order
+    categoryVelocities[cat.path] = calculateVelocity(timeframeData);
   }
 
   const ctx = document.getElementById("spiderChart");
@@ -977,14 +1100,18 @@ async function loadDashboard() {
   const overallScore = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 0;
   document.getElementById("overallScore").textContent = overallScore;
 
-  // Update cards + sparklines
+  // Update cards + sparklines + NEW visualizations
   for (const cat of topLevel) {
     const id = domIdFromPath(cat.path);
     const pctEl = document.getElementById(`pct_${id}`);
     const deltaEl = document.getElementById(`delta_${id}`);
     const sparkCanvas = document.getElementById(`spark_${id}`);
+    const bandEl = document.getElementById(`band_${id}`); // NEW
+    const goalEl = document.getElementById(`goal_${id}`); // NEW
+    const velocityEl = document.getElementById(`velocity_${id}`); // NEW
 
-    if (pctEl) pctEl.textContent = Math.round(categoryAverages[cat.path] || 0);
+    const currentPct = Math.round(categoryAverages[cat.path] || 0);
+    if (pctEl) pctEl.textContent = currentPct;
 
     const delta = categoryDeltas[cat.path];
     if (deltaEl) {
@@ -998,6 +1125,27 @@ async function loadDashboard() {
         else if (d < 0) deltaEl.classList.add('bad');
         else deltaEl.classList.add('neutral');
         deltaEl.textContent = `${d > 0 ? '+' : ''}${d}`;
+      }
+    }
+
+    // NEW: Percentile band
+    if (bandEl && currentPct > 0) {
+      bandEl.innerHTML = createPercentileBand(currentPct);
+    }
+
+    // NEW: Goal progress
+    if (goalEl) {
+      const goalTarget = currentGoals[cat.path];
+      if (goalTarget) {
+        goalEl.innerHTML = createGoalProgress(currentPct, goalTarget, cat.path);
+      }
+    }
+
+    // NEW: Velocity indicator
+    if (velocityEl) {
+      const velocity = categoryVelocities[cat.path];
+      if (velocity) {
+        velocityEl.innerHTML = createVelocityIndicator(velocity);
       }
     }
 
@@ -1031,6 +1179,83 @@ async function loadDashboard() {
     }
   }
 }
+
+// ==================== GOALS MANAGEMENT ====================
+
+// NEW: Load goals from database
+async function loadGoals() {
+  const { data } = await supabase
+    .from("category_goals")
+    .select("*")
+    .single();
+
+  if (data) {
+    currentGoals = data.goals || {};
+  }
+}
+
+// NEW: Render goals form
+function renderGoalsForm() {
+  const form = document.getElementById("goalsForm");
+  if (!form) return;
+  
+  form.innerHTML = "";
+
+  getTopLevelCategories().forEach(cat => {
+    const currentGoal = currentGoals[cat.path] || 0;
+    
+    const div = document.createElement("div");
+    div.className = "goal-form-item";
+    div.innerHTML = `
+      <div class="goal-form-header">
+        <span class="goal-form-title">${cat.icon} ${cat.name}</span>
+      </div>
+      <div class="goal-input-row">
+        <div class="form-group" style="margin: 0;">
+          <label>Target Percentile (0-100)</label>
+          <input type="number" id="goal_${cat.path}" min="0" max="100" value="${currentGoal}" placeholder="e.g., 85">
+        </div>
+        <div class="form-group" style="margin: 0;">
+          <label>Priority Level</label>
+          <select id="priority_${cat.path}">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
+    `;
+    form.appendChild(div);
+  });
+}
+
+// NEW: Save goals
+async function saveGoals() {
+  const goals = {};
+  
+  getTopLevelCategories().forEach(cat => {
+    const goalInput = document.getElementById(`goal_${cat.path}`);
+    if (goalInput && goalInput.value) {
+      goals[cat.path] = parseInt(goalInput.value);
+    }
+  });
+
+  const { error } = await supabase
+    .from("category_goals")
+    .upsert({ id: 1, goals });
+
+  if (error) {
+    console.error(error);
+    alert("Failed to save goals");
+    return;
+  }
+
+  currentGoals = goals;
+  document.getElementById("status").textContent = "✅ Goals saved!";
+  await loadDashboard(); // Refresh to show goal lines
+}
+
+// ==================== END GOALS MANAGEMENT ====================
 
 // MODAL FUNCTIONS
 let metricFieldCounter = 0;
@@ -1067,7 +1292,6 @@ function openEditCategoryModal(path) {
   document.getElementById("modalCategoryName").value = category.name;
   document.getElementById("modalCategoryIcon").value = category.icon || "";
 
-  // Load existing metrics
   const metrics = metricDefinitions.filter(m => m.category_path === path);
   document.getElementById("metricsContainer").innerHTML = "";
   metricFieldCounter = 0;
@@ -1145,7 +1369,6 @@ async function saveCategory() {
   let path = editPath;
 
   if (!isEdit) {
-    // Creating new category
     const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     path = parentPath ? `${parentPath}.${safeName}` : safeName;
 
@@ -1162,16 +1385,13 @@ async function saveCategory() {
       return;
     }
   } else {
-    // Editing existing category
     const originalPath = document.getElementById("modalOriginalPath").value || editPath;
     const safeName = name.toLowerCase().replace(/[^a-z0-9]/g, '_');
     const newPath = parentPath ? `${parentPath}.${safeName}` : safeName;
 
-    // If path changed (parent or name changed)
     if (newPath !== originalPath) {
       const descendants = getDescendants(originalPath);
 
-      // Update the category itself
       const { error: updateError } = await supabase.from("category_structure").update({
         path: newPath,
         name,
@@ -1185,7 +1405,6 @@ async function saveCategory() {
         return;
       }
 
-      // Update all descendants
       for (const desc of descendants) {
         const newDescPath = desc.path.replace(originalPath, newPath);
         const newDescParent = desc.parent_path ? desc.parent_path.replace(originalPath, newPath) : desc.parent_path;
@@ -1198,13 +1417,11 @@ async function saveCategory() {
         await supabase.from("metric_values").update({ category_path: newDescPath }).eq("category_path", desc.path);
       }
 
-      // Update metrics and values for this category
       await supabase.from("metric_definitions").update({ category_path: newPath }).eq("category_path", originalPath);
       await supabase.from("metric_values").update({ category_path: newPath }).eq("category_path", originalPath);
 
       path = newPath;
     } else {
-      // Just updating name/icon
       const { error: catError } = await supabase.from("category_structure").update({ name, icon: icon || "" }).eq("path", path);
       if (catError) {
         console.error(catError);
@@ -1213,7 +1430,6 @@ async function saveCategory() {
       }
     }
 
-    // Delete removed metrics and update existing ones
     const existingMetrics = metricDefinitions.filter(m => m.category_path === path);
     const metricsToKeep = [];
 
@@ -1224,7 +1440,6 @@ async function saveCategory() {
       }
     }
 
-    // Delete metrics not in the form
     for (const metric of existingMetrics) {
       if (!metricsToKeep.includes(metric.id)) {
         await supabase.from("metric_definitions").delete().eq("id", metric.id);
@@ -1232,7 +1447,6 @@ async function saveCategory() {
     }
   }
 
-  // Save/update metrics
   for (let i = 0; i < metricFieldCounter; i++) {
     const nameField = document.getElementById(`metricName_${i}`);
     if (!nameField) continue;
@@ -1252,13 +1466,11 @@ async function saveCategory() {
       };
 
       if (metricId) {
-        // Update existing metric
         await supabase
           .from("metric_definitions")
           .update(metricData)
           .eq("id", metricId);
       } else {
-        // Insert new metric
         await supabase.from("metric_definitions").insert([metricData]);
       }
     }
@@ -1275,7 +1487,6 @@ function getParametersForFunction(funcName) {
   return percentileFunctionsConfig.parameters[funcName] || ["value"];
 }
 
-// RENDER CATEGORY HIERARCHY
 function renderCategoryHierarchy() {
   const container = document.getElementById("categoryHierarchy");
   container.innerHTML = "";
@@ -1311,7 +1522,6 @@ function renderCategoryHierarchy() {
   renderTree(tree, container);
 }
 
-// DELETE CATEGORY
 async function deleteCategory(path) {
   if (!confirm(`Delete "${path}" and all its sub-categories and metrics?`)) return;
 
@@ -1398,35 +1608,49 @@ async function loadDataHistory() {
   const container = document.getElementById("dataHistoryTree");
   if (!container) return;
   container.innerHTML = "<p style='text-align: center; padding: 20px;'>Loading data...</p>";
+
   const filterCategory = document.getElementById("filterCategory").value;
   const filterStartDate = document.getElementById("filterStartDate").value;
   const filterEndDate = document.getElementById("filterEndDate").value;
+
   let query = supabase.from("metric_values").select("*").order("created_at", { ascending: false });
+
   if (filterCategory) {
     const descendants = getDescendants(filterCategory);
     const allPaths = [filterCategory, ...descendants.map(d => d.path)];
     query = query.in("category_path", allPaths);
   }
-  if (filterStartDate) query = query.gte("created_at", new Date(filterStartDate).toISOString());
+
+  if (filterStartDate) {
+    query = query.gte("created_at", new Date(filterStartDate).toISOString());
+  }
+
   if (filterEndDate) {
     const endDate = new Date(filterEndDate);
     endDate.setHours(23, 59, 59, 999);
     query = query.lte("created_at", endDate.toISOString());
   }
+
   const { data, error } = await query;
+
   if (error) {
-    container.innerHTML = "<p class='no-data-message'>Error loading data</p>";
+    container.innerHTML = "<p style='text-align: center; padding: 20px; color: red;'>Error loading data</p>";
     return;
   }
+
   if (!data || data.length === 0) {
-    container.innerHTML = "<p class='no-data-message'>No data entries found</p>";
+    container.innerHTML = "<div class='no-data-message'>No data found matching your filters.</div>";
     return;
   }
+
   const grouped = {};
   data.forEach(entry => {
-    if (!grouped[entry.category_path]) grouped[entry.category_path] = [];
+    if (!grouped[entry.category_path]) {
+      grouped[entry.category_path] = [];
+    }
     grouped[entry.category_path].push(entry);
   });
+
   container.innerHTML = "";
   const tree = buildCategoryTree();
   renderDataTree(tree, container, grouped);
@@ -1526,17 +1750,12 @@ function createDataEntryElement(entry) {
 
 function editDataEntry(entryId) {
   editingEntries.add(entryId);
-
-  // Store scroll position before reload
   const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
   const entryElement = document.getElementById(`entry_${entryId}`);
   const entryOffsetTop = entryElement ? entryElement.offsetTop : null;
 
-  // Reload data history
   loadDataHistory().then(() => {
-    // Restore scroll position after reload
     if (entryOffsetTop) {
-      // Scroll instantly to the entry being edited
       const reloadedEntry = document.getElementById(`entry_${entryId}`);
       if (reloadedEntry) {
         reloadedEntry.scrollIntoView({ block: 'center' });
@@ -1549,14 +1768,10 @@ function editDataEntry(entryId) {
 
 function cancelEditDataEntry(entryId) {
   editingEntries.delete(entryId);
-
-  // Store entry position before reload
   const entryElement = document.getElementById(`entry_${entryId}`);
   const entryOffsetTop = entryElement ? entryElement.offsetTop : null;
 
-  // Reload data history
   loadDataHistory().then(() => {
-    // Scroll instantly back to the entry
     if (entryOffsetTop) {
       const reloadedEntry = document.getElementById(`entry_${entryId}`);
       if (reloadedEntry) {
@@ -1581,7 +1796,6 @@ async function saveDataEntry(entryId) {
   }
   editingEntries.delete(entryId);
   document.getElementById("status").textContent = "✅ Entry updated!";
-  // Store entry position before reload
   const entryElement = document.getElementById(`entry_${entryId}`);
   const entryOffsetTop = entryElement ? entryElement.offsetTop : null;
 
@@ -1589,7 +1803,6 @@ async function saveDataEntry(entryId) {
   await loadDashboard();
   if (selectedCategory) await loadDetailStats(selectedCategory);
 
-  // Scroll instantly back to the updated entry
   if (entryOffsetTop) {
     const reloadedEntry = document.getElementById(`entry_${entryId}`);
     if (reloadedEntry) {
@@ -1620,7 +1833,7 @@ function clearFilters() {
 
 // ==================== END DATA HISTORY FUNCTIONS ====================
 
-// Expose functions referenced by inline HTML handlers
+// Expose functions
 window.switchTab = switchTab;
 window.updateChartSettings = updateChartSettings;
 window.refreshChart = refreshChart;
@@ -1643,5 +1856,6 @@ window.editDataEntry = editDataEntry;
 window.cancelEditDataEntry = cancelEditDataEntry;
 window.saveDataEntry = saveDataEntry;
 window.deleteDataEntry = deleteDataEntry;
+window.saveGoals = saveGoals; // NEW
 
 init();
