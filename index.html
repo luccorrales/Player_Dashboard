@@ -19,6 +19,7 @@
       <button class="tab" onclick="switchTab('input')">➕ Add Data</button>
       <button class="tab" onclick="switchTab('datahistory')">📝 Manage Data</button>
       <button class="tab" onclick="switchTab('manage')">🗂️ Manage Categories</button>
+      <button class="tab" onclick="switchTab('goals')">🎯 Goals</button>
       <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
     </div>
 
@@ -41,11 +42,7 @@
           <div id="categoryButtons" class="stats-list"></div>
         </aside>
 
-        <div class="glass panel panel-main">
-          <div class="panel-header">
-            <h2>Overall Performance</h2>
-            <div class="panel-subtitle">Radar view of your domains</div>
-          </div>
+        <div class="radar-chart-section">
           <div class="radar-wrap">
             <canvas id="spiderChart"></canvas>
           </div>
@@ -170,6 +167,16 @@
         <button onclick="openAddCategoryModal()">+ Add New Category</button>
         <button onclick="openAddSubCategoryModal()" class="secondary">+ Add Sub-Category</button>
         <div id="categoryHierarchy" style="margin-top: 20px;"></div>
+      </div>
+    </div>
+
+    <!-- GOALS TAB -->
+    <div id="goals" class="content">
+      <div class="input-section">
+        <h2>🎯 Set Your Goals</h2>
+        <p style="margin-bottom: 20px; color: #999;">Define target percentiles for each life domain. These will be visualized on your dashboard.</p>
+        <div id="goalsForm"></div>
+        <button onclick="saveGoals()">Save Goals</button>
       </div>
     </div>
 
