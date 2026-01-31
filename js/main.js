@@ -26,6 +26,20 @@ let expandedCategories = new Set();
 let editingEntries = new Set();
 let sparklineCharts = new Map();
 
+// Drill-down state
+let drillDownActive = false;
+let drillDownCategory = null;
+let drillDownSubcategory = null;
+let bellCurveChart = null;
+let drillHistoryChart = null;
+let drillChartSettings = {
+  scale: 'monthly',
+  units: 6,
+  customStart: null,
+  customEnd: null,
+  customAggregation: 'daily'
+};
+
 function domIdFromPath(path) {
   return path.replaceAll('.', '__');
 }
@@ -514,35 +528,20 @@ async function addMetricValues() {
 
 // SELECT CATEGORY
 async function selectCategory(path) {
-  selectedCategory = path;
-
-  if (typeof event !== 'undefined' && event?.target?.closest?.('.metric-card')) {
-    document.querySelectorAll('.metric-card').forEach(btn => {
-      btn.classList.remove('selected');
-    });
-    event.target.closest('.metric-card').classList.add('selected');
+  // Check if clicking same category - toggle drill-down
+  if (drillDownActive && drillDownCategory === path) {
+    closeDrillDown();
+    return;
   }
 
-  document.getElementById("detailPanel").style.display = "block";
+  // If different category while drill-down is active, update drill-down
+  if (drillDownActive) {
+    await openDrillDown(path);
+    return;
+  }
 
-  const breadcrumb = document.getElementById("breadcrumb");
-  const pathParts = path.split('.');
-  let breadcrumbHTML = "Home";
-  let currentPath = "";
-
-  pathParts.forEach((part, i) => {
-    currentPath = i === 0 ? part : currentPath + "." + part;
-    const cat = categoryStructure.find(c => c.path === currentPath);
-    if (cat) {
-      breadcrumbHTML += ` > ${cat.icon} ${cat.name}`;
-    }
-  });
-  breadcrumb.textContent = breadcrumbHTML;
-
-  const category = categoryStructure.find(c => c.path === path);
-  document.getElementById("detailTitle").textContent = `${category.icon} ${category.name}`;
-
-  await loadDetailStats(path);
+  // Otherwise open drill-down
+  await openDrillDown(path);
 }
 
 // LOAD DETAIL STATS
@@ -1100,15 +1099,15 @@ async function loadDashboard() {
   const overallScore = totalWeight > 0 ? Math.round(totalWeighted / totalWeight) : 0;
   document.getElementById("overallScore").textContent = overallScore;
 
-  // Update cards + sparklines + NEW visualizations
+  // Update cards + sparklines + visualizations
   for (const cat of topLevel) {
     const id = domIdFromPath(cat.path);
     const pctEl = document.getElementById(`pct_${id}`);
     const deltaEl = document.getElementById(`delta_${id}`);
     const sparkCanvas = document.getElementById(`spark_${id}`);
-    const bandEl = document.getElementById(`band_${id}`); // NEW
-    const goalEl = document.getElementById(`goal_${id}`); // NEW
-    const velocityEl = document.getElementById(`velocity_${id}`); // NEW
+    const bandEl = document.getElementById(`band_${id}`);
+    const goalEl = document.getElementById(`goal_${id}`);
+    const velocityEl = document.getElementById(`velocity_${id}`);
 
     const currentPct = Math.round(categoryAverages[cat.path] || 0);
     if (pctEl) pctEl.textContent = currentPct;
@@ -1128,12 +1127,10 @@ async function loadDashboard() {
       }
     }
 
-    // NEW: Percentile band
     if (bandEl && currentPct > 0) {
       bandEl.innerHTML = createPercentileBand(currentPct);
     }
 
-    // NEW: Goal progress
     if (goalEl) {
       const goalTarget = currentGoals[cat.path];
       if (goalTarget) {
@@ -1141,7 +1138,6 @@ async function loadDashboard() {
       }
     }
 
-    // NEW: Velocity indicator
     if (velocityEl) {
       const velocity = categoryVelocities[cat.path];
       if (velocity) {
@@ -1149,7 +1145,6 @@ async function loadDashboard() {
       }
     }
 
-    // Sparkline
     if (sparkCanvas) {
       const series = categorySpark[cat.path] || [];
       const existing = sparklineCharts.get(cat.path);
@@ -1178,7 +1173,142 @@ async function loadDashboard() {
       }));
     }
   }
+
+  // Load analytics charts
+  await loadAnalyticsCharts(topLevel, categoryAverages);
 }
+
+// ==================== ANALYTICS CHARTS ====================
+
+let pieChart, barChart;
+
+async function loadAnalyticsCharts(topLevel, categoryAverages) {
+  // Pie Chart - Category Distribution
+  const pieCtx = document.getElementById("pieChart");
+  if (pieChart) pieChart.destroy();
+
+  const pieData = topLevel.map(cat => categoryAverages[cat.path] || 0);
+  const pieLabels = topLevel.map(cat => cat.icon + " " + cat.name);
+  
+  const pieColors = [
+    'rgba(124, 92, 255, 0.8)',
+    'rgba(61, 214, 255, 0.8)',
+    'rgba(52, 211, 153, 0.8)',
+    'rgba(251, 113, 133, 0.8)',
+    'rgba(234, 179, 8, 0.8)',
+    'rgba(168, 85, 247, 0.8)',
+    'rgba(249, 115, 22, 0.8)'
+  ];
+
+  pieChart = new Chart(pieCtx, {
+    type: 'doughnut',
+    data: {
+      labels: pieLabels,
+      datasets: [{
+        data: pieData,
+        backgroundColor: pieColors,
+        borderColor: 'rgba(10, 15, 31, 0.8)',
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            color: 'rgba(232,234,242,0.80)',
+            padding: 12,
+            font: { size: 12 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': ' + Math.round(context.parsed) + 'th percentile';
+            }
+          }
+        }
+      }
+    }
+  });
+
+  // Bar Chart - Performance Comparison
+  const barCtx = document.getElementById("barChart");
+  if (barChart) barChart.destroy();
+
+  const barData = topLevel.map(cat => {
+    const current = categoryAverages[cat.path] || 0;
+    const goal = currentGoals[cat.path] || 100;
+    return { current, goal };
+  });
+
+  barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: pieLabels,
+      datasets: [
+        {
+          label: 'Current',
+          data: barData.map(d => d.current),
+          backgroundColor: 'rgba(61, 214, 255, 0.7)',
+          borderColor: 'rgba(61, 214, 255, 1)',
+          borderWidth: 1
+        },
+        {
+          label: 'Goal',
+          data: barData.map(d => d.goal),
+          backgroundColor: 'rgba(124, 92, 255, 0.3)',
+          borderColor: 'rgba(124, 92, 255, 0.6)',
+          borderWidth: 1,
+          borderDash: [5, 5]
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: {
+            color: 'rgba(232,234,242,0.80)',
+            font: { size: 12 }
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.dataset.label + ': ' + Math.round(context.parsed.y) + 'th';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          ticks: {
+            color: 'rgba(232,234,242,0.70)',
+            callback: function(value) {
+              return value + 'th';
+            }
+          },
+          grid: { color: 'rgba(255,255,255,0.08)' }
+        },
+        x: {
+          ticks: { 
+            color: 'rgba(232,234,242,0.70)',
+            font: { size: 11 }
+          },
+          grid: { display: false }
+        }
+      }
+    }
+  });
+}
+
+// ==================== END ANALYTICS CHARTS ====================
 
 // ==================== GOALS MANAGEMENT ====================
 
@@ -1240,19 +1370,66 @@ async function saveGoals() {
     }
   });
 
-  const { error } = await supabase
-    .from("category_goals")
-    .upsert({ id: 1, goals });
+  console.log('Saving goals:', goals); // Debug log
 
-  if (error) {
-    console.error(error);
-    alert("Failed to save goals");
-    return;
+  try {
+    // First, try to check if row exists
+    const { data: existingData, error: fetchError } = await supabase
+      .from("category_goals")
+      .select("*")
+      .eq("id", 1)
+      .single();
+
+    console.log('Existing data:', existingData); // Debug log
+
+    let result;
+    if (existingData) {
+      // Update existing row
+      result = await supabase
+        .from("category_goals")
+        .update({ 
+          goals,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", 1)
+        .select();
+    } else {
+      // Insert new row
+      result = await supabase
+        .from("category_goals")
+        .insert([{ 
+          id: 1, 
+          goals,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }])
+        .select();
+    }
+
+    const { data, error } = result;
+
+    if (error) {
+      console.error('Supabase error:', error);
+      alert(`Failed to save goals: ${error.message}\n\nPlease check:\n1. Table "category_goals" exists\n2. RLS policies allow INSERT/UPDATE\n3. Run setup_database.sql`);
+      return;
+    }
+
+    console.log('Goals saved successfully:', data); // Debug log
+    currentGoals = goals;
+    document.getElementById("status").textContent = "✅ Goals saved!";
+    
+    // Refresh dashboard to show new goals
+    await loadDashboard();
+    
+    // Show success feedback
+    setTimeout(() => {
+      document.getElementById("status").textContent = "✅ Dashboard updated with new goals!";
+    }, 500);
+    
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    alert(`Unexpected error: ${err.message}\n\nThis usually means the table doesn't exist. Please run setup_database.sql in Supabase.`);
   }
-
-  currentGoals = goals;
-  document.getElementById("status").textContent = "✅ Goals saved!";
-  await loadDashboard(); // Refresh to show goal lines
 }
 
 // ==================== END GOALS MANAGEMENT ====================
@@ -1833,6 +2010,443 @@ function clearFilters() {
 
 // ==================== END DATA HISTORY FUNCTIONS ====================
 
+// ==================== DRILL-DOWN FUNCTIONS ====================
+
+async function openDrillDown(path) {
+  drillDownActive = true;
+  drillDownCategory = path;
+  selectedCategory = path;
+
+  // Update selected state on cards
+  if (typeof event !== 'undefined' && event?.target?.closest?.('.metric-card')) {
+    document.querySelectorAll('.metric-card').forEach(btn => {
+      btn.classList.remove('selected');
+    });
+    event.target.closest('.metric-card').classList.add('selected');
+  }
+
+  const category = categoryStructure.find(c => c.path === path);
+  const subcategories = getChildren(path);
+
+  // Update drill-down title
+  document.getElementById('drillDownTitle').textContent = `${category.icon} ${category.name}`;
+
+  // Animate transition
+  const radarView = document.getElementById('radarView');
+  const drillDownView = document.getElementById('drillDownView');
+  
+  radarView.style.opacity = '1';
+  radarView.style.transform = 'scale(1)';
+  
+  // Fade out radar
+  radarView.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+  radarView.style.opacity = '0';
+  radarView.style.transform = 'scale(0.95)';
+  
+  await new Promise(resolve => setTimeout(resolve, 400));
+  
+  radarView.style.display = 'none';
+  drillDownView.style.display = 'flex';
+  drillDownView.style.opacity = '0';
+  drillDownView.style.transform = 'scale(0.95)';
+  
+  // Fade in drill-down
+  setTimeout(() => {
+    drillDownView.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+    drillDownView.style.opacity = '1';
+    drillDownView.style.transform = 'scale(1)';
+  }, 50);
+
+  // Build subcategory selector
+  const selector = document.getElementById('subcategorySelector');
+  selector.innerHTML = '';
+  
+  if (subcategories.length > 0) {
+    subcategories.forEach((subcat, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'subcategory-btn' + (idx === 0 ? ' active' : '');
+      btn.textContent = `${subcat.icon} ${subcat.name}`;
+      btn.onclick = () => selectSubcategory(subcat.path);
+      selector.appendChild(btn);
+    });
+    
+    // Load first subcategory by default
+    drillDownSubcategory = subcategories[0].path;
+  } else {
+    // No subcategories, use main category
+    drillDownSubcategory = path;
+  }
+
+  await loadBellCurve();
+  await loadDrillHistoryChart();
+}
+
+function closeDrillDown() {
+  drillDownActive = false;
+  selectedCategory = null;
+
+  // Update selected state on cards
+  document.querySelectorAll('.metric-card').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+
+  const radarView = document.getElementById('radarView');
+  const drillDownView = document.getElementById('drillDownView');
+  
+  // Fade out drill-down
+  drillDownView.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+  drillDownView.style.opacity = '0';
+  drillDownView.style.transform = 'scale(0.95)';
+  
+  setTimeout(async () => {
+    drillDownView.style.display = 'none';
+    radarView.style.display = 'block';
+    radarView.style.opacity = '0';
+    radarView.style.transform = 'scale(0.95)';
+    
+    // Fade in radar
+    setTimeout(() => {
+      radarView.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+      radarView.style.opacity = '1';
+      radarView.style.transform = 'scale(1)';
+    }, 50);
+  }, 400);
+}
+
+async function selectSubcategory(path) {
+  drillDownSubcategory = path;
+  
+  // Update active button
+  document.querySelectorAll('.subcategory-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+  
+  await loadBellCurve();
+  await loadDrillHistoryChart();
+}
+
+async function loadBellCurve() {
+  const { data, error } = await supabase
+    .from("metric_values")
+    .select("*")
+    .eq("category_path", drillDownSubcategory)
+    .order("created_at", { ascending: false });
+
+// Replace your old error block with this:
+if (error || !data || data.length === 0) {
+  if (bellCurveChart) bellCurveChart.destroy();
+  
+  const canvas = document.getElementById('bellCurveChart');
+  const parent = canvas.parentElement;
+
+  // 1. Hide the canvas instead of destroying it
+  canvas.style.display = 'none';
+
+  // 2. Add or update a message div
+  let msg = parent.querySelector('.chart-error-msg');
+  if (!msg) {
+      msg = document.createElement('div');
+      msg.className = 'chart-error-msg';
+      msg.style.cssText = "text-align: center; padding: 40px; color: #999;";
+      parent.prepend(msg);
+  }
+  msg.textContent = 'No data available for this subcategory';
+  return;
+}
+
+// IMPORTANT: When you DO have data, show the canvas and remove the message
+const canvas = document.getElementById('bellCurveChart');
+canvas.style.display = 'block';
+const existingMsg = canvas.parentElement.querySelector('.chart-error-msg');
+if (existingMsg) existingMsg.remove();
+
+  // Get latest percentile value
+  const latestEntry = data[0];
+  const percentile = latestEntry.percentile || 50;
+
+  // Generate bell curve data
+  const curveData = [];
+  const labels = [];
+  for (let i = 0; i <= 100; i++) {
+    labels.push(i);
+    // Normal distribution centered at 50, std dev of 15
+    const x = i;
+    const mean = 50;
+    const stdDev = 15;
+    const y = (1 / (stdDev * Math.sqrt(2 * Math.PI))) * 
+              Math.exp(-0.5 * Math.pow((x - mean) / stdDev, 2));
+    curveData.push(y * 100); // Scale for visibility
+  }
+
+  const ctx = document.getElementById('bellCurveChart');
+  if (bellCurveChart) bellCurveChart.destroy();
+
+  const category = categoryStructure.find(c => c.path === drillDownSubcategory);
+  
+  bellCurveChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Population Distribution',
+        data: curveData,
+        borderColor: 'rgba(124, 92, 255, 0.5)',
+        backgroundColor: 'rgba(124, 92, 255, 0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 0,
+        borderWidth: 2
+      }, {
+        label: 'Your Position',
+        data: labels.map(x => x === Math.round(percentile) ? Math.max(...curveData) * 1.1 : null),
+        borderColor: 'rgba(61, 214, 255, 1)',
+        backgroundColor: 'rgba(61, 214, 255, 1)',
+        pointRadius: labels.map(x => x === Math.round(percentile) ? 8 : 0),
+        pointStyle: 'triangle',
+        borderWidth: 0,
+        showLine: false
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: `${category.icon} ${category.name} - Distribution`,
+          color: '#e0e0e0',
+          font: { size: 14, weight: '600' }
+        },
+        legend: {
+          labels: { color: '#e0e0e0' }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              if (context.datasetIndex === 1 && context.parsed.y) {
+                return `You are at ${percentile}th percentile`;
+              }
+              return `Percentile: ${context.label}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: {
+            display: true,
+            text: 'Percentile',
+            color: '#999'
+          },
+          ticks: { color: '#999' },
+          grid: { color: 'rgba(255,255,255,0.1)' }
+        },
+        y: {
+          title: {
+            display: true,
+            text: 'Frequency',
+            color: '#999'
+          },
+          ticks: { color: '#999', display: false },
+          grid: { color: 'rgba(255,255,255,0.1)' }
+        }
+      }
+    }
+  });
+}
+
+async function loadDrillHistoryChart() {
+  const endDate = new Date();
+  let startDate = new Date();
+
+  if (drillChartSettings.scale === 'custom') {
+    startDate = drillChartSettings.customStart ? new Date(drillChartSettings.customStart) : new Date(endDate - 180 * 24 * 60 * 60 * 1000);
+    endDate.setTime(drillChartSettings.customEnd ? new Date(drillChartSettings.customEnd).getTime() : Date.now());
+  } else {
+    const units = drillChartSettings.units || 6;
+    switch (drillChartSettings.scale) {
+      case 'daily':
+        startDate.setDate(startDate.getDate() - units);
+        break;
+      case 'weekly':
+        startDate.setDate(startDate.getDate() - units * 7);
+        break;
+      case 'monthly':
+        startDate.setMonth(startDate.getMonth() - units);
+        break;
+      case 'yearly':
+        startDate.setFullYear(startDate.getFullYear() - units);
+        break;
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("metric_values")
+    .select("*")
+    .eq("category_path", drillDownSubcategory)
+    .gte("created_at", startDate.toISOString())
+    .lte("created_at", endDate.toISOString())
+    .order("created_at", { ascending: true });
+
+    if (error || !data || data.length === 0) {
+      if (drillHistoryChart) drillHistoryChart.destroy();
+      
+      const canvas = document.getElementById('drillHistoryChart');
+      const parent = canvas.parentElement;
+  
+      canvas.style.display = 'none';
+  
+      let msg = parent.querySelector('.history-error-msg');
+      if (!msg) {
+          msg = document.createElement('div');
+          msg.className = 'history-error-msg';
+          msg.style.cssText = "text-align: center; padding: 40px; color: #999;";
+          parent.prepend(msg);
+      }
+      msg.textContent = 'No historical data available';
+      return;
+  }
+  
+  // Show canvas if data exists
+  const historyCanvas = document.getElementById('drillHistoryChart');
+  historyCanvas.style.display = 'block';
+  const existingHistoryMsg = historyCanvas.parentElement.querySelector('.history-error-msg');
+  if (existingHistoryMsg) existingHistoryMsg.remove();
+
+  const aggregationScale = drillChartSettings.scale === 'custom' ?
+    drillChartSettings.customAggregation :
+    getAggregationLevel(drillChartSettings.scale);
+
+  const aggregatedData = aggregateData(data, aggregationScale);
+
+  const datasets = {};
+  aggregatedData.forEach(entry => {
+    const key = entry.metric_name;
+    if (!datasets[key]) {
+      datasets[key] = {
+        label: entry.metric_name,
+        data: [],
+        tension: 0.3,
+        borderWidth: 2
+      };
+    }
+  });
+
+  const labels = [];
+  aggregatedData.forEach(entry => {
+    const dateLabel = formatDateLabel(entry.date, aggregationScale);
+    if (!labels.includes(dateLabel)) labels.push(dateLabel);
+
+    const key = entry.metric_name;
+    if (datasets[key] && entry.percentile !== null) {
+      datasets[key].data.push({
+        x: dateLabel,
+        y: entry.percentile
+      });
+    }
+  });
+
+  const goalValue = currentGoals[drillDownSubcategory];
+  const chartDatasets = Object.values(datasets);
+  
+  if (goalValue && labels.length > 0) {
+    chartDatasets.push({
+      label: '🎯 Goal Target',
+      data: labels.map(label => ({ x: label, y: goalValue })),
+      borderColor: 'rgba(124, 92, 255, 0.7)',
+      borderWidth: 2,
+      borderDash: [5, 5],
+      pointRadius: 0,
+      fill: false,
+      tension: 0
+    });
+  }
+
+  const ctx = document.getElementById('drillHistoryChart');
+  if (drillHistoryChart) drillHistoryChart.destroy();
+
+  const category = categoryStructure.find(c => c.path === drillDownSubcategory);
+
+  drillHistoryChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: chartDatasets
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: `${category.icon} ${category.name} - Progress Over Time`,
+          color: '#e0e0e0',
+          font: { size: 14, weight: '600' }
+        },
+        legend: {
+          labels: { color: '#e0e0e0' }
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Percentile',
+            color: '#999'
+          },
+          ticks: { color: '#999' },
+          grid: { color: 'rgba(255,255,255,0.1)' }
+        },
+        x: {
+          ticks: { color: '#999' },
+          grid: { color: 'rgba(255,255,255,0.1)' }
+        }
+      }
+    }
+  });
+}
+
+function updateDrillChartSettings() {
+  const scale = document.getElementById('drillTimeScale').value;
+  drillChartSettings.scale = scale;
+  
+  if (scale === 'custom') {
+    document.getElementById('drillCustomDateRange').style.display = 'block';
+    drillChartSettings.customStart = document.getElementById('drillCustomStartDate').value || null;
+    drillChartSettings.customEnd = document.getElementById('drillCustomEndDate').value || null;
+    drillChartSettings.customAggregation = document.getElementById('drillCustomAggregation').value || 'daily';
+  } else {
+    document.getElementById('drillCustomDateRange').style.display = 'none';
+    drillChartSettings.units = parseInt(document.getElementById('drillTimeUnits').value) || 6;
+    
+    const unitLabel = document.getElementById('drillTimeUnitsLabel');
+    switch (scale) {
+      case 'daily':
+        unitLabel.textContent = 'days';
+        break;
+      case 'weekly':
+        unitLabel.textContent = 'weeks';
+        break;
+      case 'monthly':
+        unitLabel.textContent = 'months';
+        break;
+      case 'yearly':
+        unitLabel.textContent = 'years';
+        break;
+    }
+  }
+}
+
+async function refreshDrillChart() {
+  updateDrillChartSettings();
+  await loadDrillHistoryChart();
+}
+
+// ==================== END DRILL-DOWN FUNCTIONS ====================
+
 // Expose functions
 window.switchTab = switchTab;
 window.updateChartSettings = updateChartSettings;
@@ -1857,5 +2471,10 @@ window.cancelEditDataEntry = cancelEditDataEntry;
 window.saveDataEntry = saveDataEntry;
 window.deleteDataEntry = deleteDataEntry;
 window.saveGoals = saveGoals; // NEW
+window.closeDrillDown = closeDrillDown;
+window.updateDrillChartSettings = updateDrillChartSettings;
+window.refreshDrillChart = refreshDrillChart;
+
+// ==================== END DRILL-DOWN FUNCTIONS ====================
 
 init();

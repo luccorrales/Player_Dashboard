@@ -12,24 +12,37 @@
   <div class="container">
     <h1>Life Progress</h1>
     
-    <div id="status" class="status">Initializing...</div>
-
-    <div class="tabs">
-      <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
-      <button class="tab" onclick="switchTab('input')">➕ Add Data</button>
-      <button class="tab" onclick="switchTab('datahistory')">📝 Manage Data</button>
-      <button class="tab" onclick="switchTab('manage')">🗂️ Manage Categories</button>
-      <button class="tab" onclick="switchTab('goals')">🎯 Goals</button>
-      <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+    <div class="header-row">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('dashboard')">📊 Dashboard</button>
+        <button class="tab" onclick="switchTab('input')">➕ Add Data</button>
+        <button class="tab" onclick="switchTab('datahistory')">📝 Manage Data</button>
+        <button class="tab" onclick="switchTab('manage')">🗂️ Manage Categories</button>
+        <button class="tab" onclick="switchTab('goals')">🎯 Goals</button>
+        <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+      </div>
+      <div id="status" class="status">Initializing...</div>
     </div>
 
     <!-- DASHBOARD TAB -->
     <div id="dashboard" class="content active">
-      <section class="hero glass">
-        <div class="hero-inner">
-          <div class="hero-label">Total Life Level</div>
-          <div class="hero-score" id="overallScore">--</div>
-          <div class="hero-subtext">Weighted average across your life domains</div>
+      <section class="hero-bar">
+        <div class="hero-bar-section">
+          <div class="hero-bar-chart">
+            <canvas id="pieChart"></canvas>
+          </div>
+        </div>
+        <div class="hero-bar-section">
+          <div class="hero-inner">
+            <div class="hero-label">Total Life Level</div>
+            <div class="hero-score" id="overallScore">--</div>
+            <div class="hero-subtext">Weighted average across your life domains</div>
+          </div>
+        </div>
+        <div class="hero-bar-section">
+          <div class="hero-bar-chart">
+            <canvas id="barChart"></canvas>
+          </div>
         </div>
       </section>
 
@@ -43,11 +56,80 @@
         </aside>
 
         <div class="radar-chart-section">
-          <div class="radar-wrap">
+          <!-- State A: Radar Chart -->
+          <div id="radarView" class="radar-wrap">
             <canvas id="spiderChart"></canvas>
+          </div>
+
+          <!-- State B: Drill-Down View -->
+          <div id="drillDownView" class="drill-down-container">
+            <div class="drill-down-header">
+              <h2 id="drillDownTitle">Category Details</h2>
+              <button class="close-drill-down" onclick="closeDrillDown()">✕</button>
+            </div>
+            
+            <!-- Top Section: Distribution Bell Curve -->
+            <div class="drill-down-section distribution-section">
+              <div class="section-header">
+                <h3>Subcategory Distribution</h3>
+                <div class="subcategory-selector" id="subcategorySelector"></div>
+              </div>
+              <div class="bell-curve-container">
+                <canvas id="bellCurveChart"></canvas>
+              </div>
+            </div>
+
+            <!-- Bottom Section: Historical Progress -->
+            <div class="drill-down-section history-section">
+              <div class="section-header">
+                <h3>Historical Progress</h3>
+              </div>
+              <div class="history-chart">
+                <div class="chart-controls">
+                  <div class="control-group">
+                    <label>Time Scale:</label>
+                    <select id="drillTimeScale" onchange="updateDrillChartSettings()">
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly" selected>Monthly</option>
+                      <option value="yearly">Yearly</option>
+                      <option value="custom">Custom Range</option>
+                    </select>
+
+                    <label>Go Back:</label>
+                    <input type="number" id="drillTimeUnits" value="6" min="1" max="100" onchange="updateDrillChartSettings()">
+                    <span id="drillTimeUnitsLabel">months</span>
+
+                    <button onclick="refreshDrillChart()" style="margin: 0;">Refresh</button>
+                  </div>
+
+                  <div id="drillCustomDateRange" class="custom-date-range">
+                    <div class="control-group">
+                      <label>Start Date:</label>
+                      <input type="date" id="drillCustomStartDate">
+
+                      <label>End Date:</label>
+                      <input type="date" id="drillCustomEndDate">
+
+                      <label>Aggregate By:</label>
+                      <select id="drillCustomAggregation">
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                <div class="timeline-chart-wrap">
+                  <canvas id="drillHistoryChart"></canvas>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
+
       
       <section id="detailPanel" class="glass panel timeline-panel" style="display: none;">
         <div class="timeline-header">
