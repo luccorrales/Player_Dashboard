@@ -32,7 +32,7 @@ body {
   padding: 20px;
   color: var(--text);
 }
-.container { max-width: 1200px; margin: 0 auto; }
+.container { max-width: 1600px; margin: 0 auto; padding: 0 20px; }
 h1 {
   color: var(--text);
   text-align: center;
@@ -74,19 +74,26 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
 }
 .status {
   background: rgba(255,255,255,0.06);
-  padding: 15px;
+  padding: 12px 20px;
   border-radius: 10px;
-  margin-bottom: 20px;
   text-align: center;
   font-weight: bold;
   color: var(--text);
   border: 1px solid var(--border);
+  font-size: 0.9em;
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 .tabs {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
   flex-wrap: wrap;
+  flex: 1;
 }
 .tab {
   background: rgba(255,255,255,0.06);
@@ -102,6 +109,37 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
 .tab.active { background: rgba(124,92,255,0.35); color: var(--text); border-color: rgba(124,92,255,0.55); }
 .content { display: none; }
 .content.active { display: block; }
+
+/* Hero Bar with Three Sections */
+.hero-bar{
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 18px;
+  margin: 18px 0;
+}
+.hero-bar-section{
+  padding: 22px 18px;
+  text-align: center;
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.hero-bar-chart{
+  position: relative;
+  width: 100%;
+  height: 200px;
+  margin-top: 10px;
+}
+.hero-bar-chart canvas{
+  width: 100% !important;
+  height: 100% !important;
+}
+@media (max-width: 968px) {
+  .hero-bar { grid-template-columns: 1fr; }
+}
 
 /* Hero */
 .hero{
@@ -142,30 +180,147 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
 .panel-left{ min-height: 360px; }
 .panel-main{ min-height: 360px; }
 
-/* Radar chart section - prominent, no background */
+/* Radar chart section - prominent, higher placement */
 .radar-chart-section{
   position: relative;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  min-height: 500px;
+  padding-top: 20px;
+  min-height: 450px;
 }
 
 .radar-wrap{
   position: relative;
   width: 100%;
-  max-width: 650px;
+  max-width: 100%;
   aspect-ratio: 1 / 1;
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 .radar-wrap canvas{
   width: 100% !important;
   height: 100% !important;
+  display: block;
+}
+
+/* Drill-down container */
+.drill-down-container {
+  display: none;
+  flex-direction: column;
+  width: 100%;
+  gap: 20px;
+  opacity: 0;
+  transform: scale(0.95);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.drill-down-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.drill-down-header h2 {
+  margin: 0;
+  font-size: 1.5em;
+  color: var(--text);
+}
+
+.close-drill-down {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  padding: 0;
+  margin: 0;
+}
+
+.close-drill-down:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.1);
+}
+
+.drill-down-section {
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.1em;
+  color: var(--text);
+}
+
+.subcategory-selector {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.subcategory-btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 14px;
+  margin: 0;
+}
+
+.subcategory-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+.subcategory-btn.active {
+  background: rgba(124,92,255,0.35);
+  border-color: rgba(124,92,255,0.55);
+}
+
+.bell-curve-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  margin-top: 10px;
+}
+
+.bell-curve-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.distribution-section {
+  min-height: 350px;
+}
+
+.history-section {
+  min-height: 400px;
 }
 
 @media (max-width: 968px) {
   .dashboard-grid { grid-template-columns: 1fr; }
-  .radar-chart-section{ min-height: 400px; }
-  .radar-wrap{ max-width: 100%; }
+  .radar-chart-section{ min-height: 400px; padding-top: 10px; }
+  .radar-wrap{ max-width: 100%; aspect-ratio: 16 / 11; }
 }
 
 /* Metric cards */
@@ -651,6 +806,44 @@ button.danger:hover { background: #dc2626; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
+}
+
+/* Analytics Chart Section */
+.analytics-section{
+  margin-top: 18px;
+}
+.analytics-grid{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.analytics-chart-panel{
+  background: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.analytics-chart-panel h3{
+  font-size: 1.1em;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--text);
+}
+.analytics-chart-wrap{
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+.analytics-chart-wrap canvas{
+  width: 100% !important;
+  height: 100% !important;
+}
+
+@media (max-width: 968px) {
+  .analytics-grid { grid-template-columns: 1fr; }
 }
 
 /* Data Management Styles */
