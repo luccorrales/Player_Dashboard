@@ -181,7 +181,37 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
 .panel-main{ min-height: 360px; }
 
 /* Radar chart section - prominent, higher placement */
-.radar-chart-section{
+
+.radar-wrap{
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  opacity: 1;
+  transform: scale(1);
+}
+.radar-wrap canvas{
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* View states for radar and drill-down */
+.radar-wrap.view-active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.radar-wrap.view-hidden {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
+}
+
+/* Make radar-chart-section a positioning context */
+.radar-chart-section {
   position: relative;
   display: flex;
   align-items: flex-start;
@@ -190,28 +220,32 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
   min-height: 450px;
 }
 
-.radar-wrap{
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  aspect-ratio: 1 / 1;
-  transition: opacity 0.4s ease, transform 0.4s ease;
-}
-.radar-wrap canvas{
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-}
-
 /* Drill-down container */
 .drill-down-container {
-  display: none;
+  display: flex;
   flex-direction: column;
   width: 100%;
+  height: 100%;
   gap: 20px;
   opacity: 0;
   transform: scale(0.95);
   transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.drill-down-container.view-active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.drill-down-container.view-hidden {
+  opacity: 0;
+  transform: scale(0.95);
+  pointer-events: none;
 }
 
 .drill-down-header {
@@ -276,7 +310,7 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
   flex-wrap: wrap;
 }
 
-.subcategory-btn {
+.subcategory-button {
   background: rgba(255,255,255,0.06);
   border: 1px solid var(--border);
   color: var(--text);
@@ -288,11 +322,11 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
   margin: 0;
 }
 
-.subcategory-btn:hover {
+.subcategory-button:hover {
   background: rgba(255,255,255,0.12);
 }
 
-.subcategory-btn.active {
+.subcategory-button.active {
   background: rgba(124,92,255,0.35);
   border-color: rgba(124,92,255,0.55);
 }
@@ -302,11 +336,30 @@ h2 { color: var(--text); font-weight: 700; letter-spacing: -0.015em; }
   width: 100%;
   height: 300px;
   margin-top: 10px;
+  cursor: crosshair;
 }
 
 .bell-curve-container canvas {
   width: 100% !important;
   height: 100% !important;
+}
+
+#bellCurveFloatingLabel {
+  position: absolute;
+  background: rgba(20, 20, 30, 0.95);
+  border: 2px solid rgba(61, 214, 255, 0.8);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: #e0e0e0;
+  font-size: 13px;
+  font-weight: 600;
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+  text-align: center;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .distribution-section {
@@ -869,3 +922,25 @@ button.danger:hover { background: #dc2626; }
 .search-filter { background: #1a1a2e; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #3a3a4e; }
 .filter-row { display: flex; gap: 15px; align-items: end; flex-wrap: wrap; }
 .filter-group { flex: 1; min-width: 200px; }
+
+/* =========================
+   VIEW TRANSITIONS
+========================= */
+
+.view {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 280ms ease;
+}
+
+.view.view-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.view.view-hidden {
+  opacity: 0;
+  pointer-events: none;
+}

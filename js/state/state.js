@@ -23,6 +23,7 @@ export const state = {
     subcategory: null,
     bellCurveChart: null,
     historyChart: null,
+    cursorSystem: null, // Unified cursor interaction system
     settings: {
       scale: 'monthly',
       units: 6,

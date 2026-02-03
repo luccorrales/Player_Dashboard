@@ -1,17 +1,23 @@
 // percentile-utils.js (ES module)
 
+// CRITICAL: The benchmarks correspond to these percentile points, NOT linear spacing
+const PERC_POINTS = [1, 10, 25, 50, 75, 90, 99];
+
 export function calculatePercentileFromBenchmarks(value, benchmarks) {
-  if (value <= benchmarks[0]) return 0;
-  if (value >= benchmarks[benchmarks.length - 1]) return 100;
+  if (value <= benchmarks[0]) return PERC_POINTS[0];
+  if (value >= benchmarks[benchmarks.length - 1]) return PERC_POINTS[benchmarks.length - 1];
 
   for (let i = 0; i < benchmarks.length - 1; i++) {
     if (value >= benchmarks[i] && value <= benchmarks[i + 1]) {
       const range = benchmarks[i + 1] - benchmarks[i];
       const position = value - benchmarks[i];
       const pctInRange = position / range;
-      const pctStart = (i / (benchmarks.length - 1)) * 100;
-      const pctEnd = ((i + 1) / (benchmarks.length - 1)) * 100;
-      return Math.round(pctStart + (pctEnd - pctStart) * pctInRange);
+      
+      // Use actual percentile points, not linear index mapping
+      const pctStart = PERC_POINTS[i];
+      const pctEnd = PERC_POINTS[i + 1];
+      
+      return pctStart + (pctEnd - pctStart) * pctInRange;
     }
   }
 

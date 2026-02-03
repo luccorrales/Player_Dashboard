@@ -15,7 +15,7 @@ export const percentileFunctionsConfig = {
   parameters: {
     networth_percentile: ["value", "age"],
     income_percentile: ["value"],
-    bench_press_percentile: ["weight", "age", "bodyweight"],
+    bench_press_percentile: ["oneRM", "age", "bodyweight"],
     iq_percentile: ["value"],
     run_5k_percentile: ["minutes", "age", "gender"],
     strength_ratio_percentile: ["weight", "bodyweight"],

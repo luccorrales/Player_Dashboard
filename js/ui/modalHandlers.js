@@ -2,7 +2,7 @@ import { state } from '../state/state.js';
 import { supabase } from '../config/supabase.js';
 import { buildCategoryTree } from '../services/categoryService.js';
 import { saveCategory, deleteCategory } from '../services/categoryService.js';
-import { loadCategoryStructure } from '../services/categoryService.js';
+import { loadCategoryStructure, loadMetricDefinitions } from '../services/categoryService.js';
 
 export function renderCategoryHierarchy() {
   const container = document.getElementById("categoryHierarchy");
@@ -207,6 +207,9 @@ export async function saveCategoryHandler() {
       await supabase.from("metric_definitions").delete().eq("category_path", fullPath);
       await supabase.from("metric_definitions").insert(metrics);
     }
+
+    // CRITICAL FIX: Reload metric definitions after saving
+    await loadMetricDefinitions();
 
     closeModal();
     await loadCategoryStructure(true);

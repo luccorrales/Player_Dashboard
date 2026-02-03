@@ -48,7 +48,7 @@ export async function initializeDefaultStructure() {
 
   const defaultMetrics = [
     { category_path: "financial.networth", metric_name: "Net Worth", unit: "USD", percentile_function: "networth_percentile", parameters: ["value", "age"] },
-    { category_path: "physical.strength", metric_name: "Bench Press", unit: "lbs", percentile_function: "bench_press_percentile", parameters: ["weight", "age", "bodyweight"] }
+    { category_path: "physical.strength", metric_name: "Bench Press", unit: "lbs", percentile_function: "bench_press_percentile", parameters: ["oneRM", "age", "bodyweight"] }
   ];
 
   await supabase.from("metric_definitions").insert(defaultMetrics);

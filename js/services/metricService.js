@@ -36,14 +36,23 @@ export async function addMetricValues(categoryPath, metrics, comparisonGroup) {
       comparisonGroup
     );
     
-    entries.push({
+    const entry = {
       category_path: categoryPath,
       metric_name: metric.name,
       value: metric.value,
-      percentile: percentile,
+      // Ensure the percentile is rounded before sending to Supabase
+      percentile: percentile !== null ? Math.round(percentile) : null, 
       comparison_group: comparisonGroup,
       created_at: new Date().toISOString()
-    });
+    };
+    
+    // Add raw inputs if they exist (for strength metrics)
+    if (metric.raw_input_1 !== undefined && metric.raw_input_2 !== undefined) {
+      entry.raw_input_1 = metric.raw_input_1;
+      entry.raw_input_2 = metric.raw_input_2;
+    }
+    
+    entries.push(entry);
   }
 
   const { error } = await supabase
@@ -85,6 +94,7 @@ export async function calculatePercentileForMetric(metricName, value, comparison
   );
 
   if (!metricDef || !metricDef.percentile_function) {
+    console.warn(`No percentile function defined for metric: ${metricName}`);
     return null;
   }
 
@@ -96,21 +106,38 @@ export async function calculatePercentileForMetric(metricName, value, comparison
     return null;
   }
 
-  const args = {};
+  // Build argument array based on parameter order
+  const args = [];
+  
   metricDef.parameters.forEach(param => {
-    if (param === 'value') {
-      args.value = value;
+    // Handle all variations of the "value" parameter
+    if (param === 'value' || param === 'oneRM' || param === 'weight') {
+      args.push(value);
     } else if (param === 'age') {
-      args.age = state.userProfile.age;
+      args.push(state.userProfile.age || 30);
     } else if (param === 'bodyweight') {
-      args.bodyweight = state.userProfile.weight;
+      args.push(state.userProfile.weight || 180);
     } else if (param === 'gender') {
-      args.gender = state.userProfile.gender;
+      args.push(state.userProfile.gender || 'male');
+    } else if (param === 'minutes') {
+      args.push(value);
+    } else {
+      // For any unknown parameter, default to null
+      console.warn(`Unknown parameter: ${param}`);
+      args.push(null);
     }
   });
 
   try {
-    return func(args);
+    console.log(`Calculating percentile for ${metricName}:`, {
+      function: funcName,
+      parameters: metricDef.parameters,
+      args: args
+    });
+    
+    const result = func(...args); // Spread args as individual parameters
+    console.log(`Result: ${result}`);
+    return result;
   } catch (error) {
     console.error(`Error calculating percentile for ${metricName}:`, error);
     return null;

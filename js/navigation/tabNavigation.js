@@ -1,6 +1,8 @@
 import { state } from '../state/state.js';
 import { renderCategoryHierarchy, renderGoalsForm, renderWeightsForm } from '../ui/modalHandlers.js';
 import { loadDataHistory } from '../ui/dataHistoryUI.js';
+import { openDrillDown, closeDrillDown } from '../features/drillDown.js';
+import { loadDetailChart } from '../ui/chartRenderer.js';
 
 export function switchTab(tabName) {
   document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
@@ -68,7 +70,6 @@ export async function refreshChart() {
   }
 
   const { loadDashboard } = await import('../ui/dashboardRenderer.js');
-  const { loadDetailChart } = await import('../ui/chartRenderer.js');
   
   await loadDashboard();
 
@@ -78,15 +79,34 @@ export async function refreshChart() {
 }
 
 export async function selectCategory(path) {
+  // If clicking the same category that's already in drill-down, close it
+  if (state.drillDown.active && state.drillDown.category === path) {
+    closeDrillDown();
+    state.selectedCategory = null;
+    document.getElementById("detailPanel").style.display = "none";
+    return;
+  }
+
+  // If a different category is active in drill-down, close it first
+  if (state.drillDown.active) {
+    closeDrillDown();
+  }
+
   state.selectedCategory = path;
 
   const category = state.categoryStructure.find(c => c.path === path);
   const breadcrumb = document.getElementById("breadcrumb");
-  breadcrumb.textContent = `${category.icon} ${category.name}`;
+  if (breadcrumb) {
+    breadcrumb.textContent = `${category?.icon || ''} ${category?.name || path}`;
+  }
 
+  // Show detail panel for breadcrumb and title
   document.getElementById("detailPanel").style.display = "block";
-  document.getElementById("detailTitle").textContent = `${category.icon} ${category.name} - History Timeline`;
+  document.getElementById("detailTitle").textContent = `${category?.icon || ''} ${category?.name || path}`;
 
-  const { loadDetailPanel } = await import('../ui/detailPanel.js');
-  await loadDetailPanel(path);
+  // Load the detail chart (this will be hidden when drill-down opens, but needed for when drill-down closes)
+  await loadDetailChart(path);
+
+  // Open drill-down view (this will fade out radar and fade in bell curve + timeline)
+  await openDrillDown(path);
 }

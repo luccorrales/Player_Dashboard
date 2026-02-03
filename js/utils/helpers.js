@@ -129,3 +129,10 @@ export function aggregateData(data, aggregation) {
       : null
   }));
 }
+
+export function calculateOneRM(weight, reps) {
+  if (reps === 1) return weight;
+  if (reps === 0) return 0;
+  // Brzycki Formula: Weight / (1.0278 - (0.0278 * Reps))
+  return weight / (1.0278 - (0.0278 * reps));
+}
