@@ -31,7 +31,27 @@ export async function updateMetricInputs() {
     div.className = "metric-input-group";
   
     // Identify metrics that need Weight + Reps logic
-    const isStrengthMetric = ["Bench Press", "Squat", "Deadlift", "Shoulder Press"].includes(metric.metric_name);
+    const isStrengthMetric = [
+      "Bench Press",
+      "Squat",
+      "Deadlift",
+      "Shoulder Press",
+    
+      // Upper body compound
+      "Lat Pulldown",
+      "Seated Row (Close)",
+      "Seated Row (Wide)",
+    
+      // Isolation / accessory
+      "Lateral Raise",
+      "Bicep Curl",
+      "Tricep Extension",
+    
+      // Lower body machines
+      "Leg Extension",
+      "Leg Curl"
+    ].includes(metric.metric_name);
+
   
     if (isStrengthMetric) {
       div.innerHTML = `
