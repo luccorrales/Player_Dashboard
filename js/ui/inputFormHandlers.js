@@ -30,28 +30,32 @@ export async function updateMetricInputs() {
     const div = document.createElement("div");
     div.className = "metric-input-group";
   
+    // DEBUG: Log the actual metric name
+    console.log(`Processing metric: "${metric.metric_name}"`);
+    
     // Identify metrics that need Weight + Reps logic
-    const isStrengthMetric = [
+    const strengthMetrics = [
       "Bench Press",
       "Squat",
       "Deadlift",
       "Shoulder Press",
-    
-      // Upper body compound
       "Lat Pulldown",
       "Seated Row (Close)",
       "Seated Row (Wide)",
-    
-      // Isolation / accessory
       "Lateral Raise",
       "Bicep Curl",
       "Tricep Extension",
-    
-      // Lower body machines
       "Leg Extension",
       "Leg Curl"
-    ].includes(metric.metric_name);
-
+    ];
+    
+    const isStrengthMetric = strengthMetrics.includes(metric.metric_name);
+    
+    // DEBUG: Log if it's a strength metric
+    console.log(`  Is strength metric: ${isStrengthMetric}`);
+    if (!isStrengthMetric && metric.metric_name.toLowerCase().includes('row')) {
+      console.log(`  ⚠️ Seated Row metric NOT matched! Actual name: "${metric.metric_name}"`);
+    }
   
     if (isStrengthMetric) {
       div.innerHTML = `
