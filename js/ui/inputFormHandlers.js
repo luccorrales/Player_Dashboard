@@ -39,8 +39,8 @@ export async function updateMetricInputs() {
     
       // Upper body compound
       "Lat Pulldown",
-      "Seated Row (Close)",
-      "Seated Row (Wide)",
+      "Seated Row Close",
+      "Seated Row Wide",
     
       // Isolation / accessory
       "Lateral Raise",
